@@ -1,0 +1,30 @@
+0.2.1 ()
+=====
+* Added file descriptor to Ogg.Sync.create_from_file
+  in order to be able to close it and let the Gc clean
+  everything..
+* Added Ogg.Stream.eos
+* Added Ogg.Stream.peek_packet to peek a packet
+  without advancing the stream. Usefull to test first
+  packet when parsing ogg streams.
+
+0.2.0 (16-04-2008
+=====
+* More portable invokation of make
+* Now installs .cmx file
+* Reworked API, added more functions.
+  + Binding is now ready to decode theora 
+    and multiplexed streams
+  + Compatibility functions are available, 
+    old code should compile on the new
+    API
+
+0.1.1 (05-11-2007)
+=====
+* Cleared out license headers.
+  Now using LGPL + linking exception
+Acked-by: smimram
+
+0.1.0 (16-10-2007)
+=====
+* Initial release
