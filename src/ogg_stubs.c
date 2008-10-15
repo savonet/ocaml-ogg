@@ -83,7 +83,7 @@ CAMLprim value ocaml_ogg_page_serialno(value page)
 {
   CAMLparam1(page);
   ogg_page op;
-  CAMLreturn(Val_long(ogg_page_serialno(page_of_value(page,&op))));
+  CAMLreturn(caml_copy_nativeint(ogg_page_serialno(page_of_value(page,&op))));
 }
 
 CAMLprim value ocaml_ogg_page_eos(value page)
@@ -260,7 +260,7 @@ CAMLprim value ocaml_ogg_stream_init(value serial)
   CAMLlocal1(ans);
   ogg_stream_state *os = malloc(sizeof(ogg_stream_state));
 
-  ogg_stream_init(os, Int_val(serial));
+  ogg_stream_init(os, Nativeint_val(serial));
   ans = caml_alloc_custom(&stream_state_ops, sizeof(ogg_stream_state*), 1, 0);
   Stream_state_val(ans) = os;
 

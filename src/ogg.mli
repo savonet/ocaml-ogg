@@ -59,7 +59,7 @@ sig
   (** 
     * Returns the unique serial number for the logical bitstream of this page. 
     * Each page contains the serial number for the logical bitstream that it belongs to.*)
-  val serialno : t -> int
+  val serialno : t -> nativeint
 
   (** 
     * Indicates whether this page is at the end of the logical bitstream. *)
@@ -163,7 +163,7 @@ sig
   (**
     * Create a [stream].
     *)
-  val create : ?serial:int -> unit -> stream
+  val create : ?serial:nativeint -> unit -> stream
 
   (** Returns true if the end of stream has been reached. *)
   val eos : stream -> bool

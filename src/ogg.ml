@@ -50,7 +50,7 @@ module Page =
 struct
   type t = string*string
 
-  external serialno : t -> int = "ocaml_ogg_page_serialno"
+  external serialno : t -> nativeint = "ocaml_ogg_page_serialno"
 
   external eos : t -> bool = "ocaml_ogg_page_eos"
 
@@ -76,9 +76,9 @@ struct
 
   type packet
 
-  external create : int -> stream = "ocaml_ogg_stream_init"
+  external create : nativeint -> stream = "ocaml_ogg_stream_init"
 
-  let create ?(serial = Random.int 0x3FFFFFFF) () = create serial
+  let create ?(serial = Random.nativeint (Nativeint.of_int 0x3FFFFFFF)) () = create serial
 
   external eos : stream -> bool = "ocaml_ogg_stream_eos"
 
