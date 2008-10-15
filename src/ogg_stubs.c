@@ -125,7 +125,7 @@ CAMLprim value ocaml_ogg_page_granulepos(value page)
 {
   CAMLparam1(page);
   ogg_page op;
-  CAMLreturn(Val_int(ogg_page_granulepos(page_of_value(page,&op))));
+  CAMLreturn(caml_copy_int64(ogg_page_granulepos(page_of_value(page,&op))));
 }
 
 CAMLprim value ocaml_ogg_page_pageno(value page)

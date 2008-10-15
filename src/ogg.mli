@@ -104,7 +104,7 @@ sig
     *
     * For example, in audio codecs this position is the pcm sample number and 
     * in video this is the frame number.*)
-  val granulepos : t -> int
+  val granulepos : t -> Int64.t
 
   (**
     * Returns the sequential page number. 

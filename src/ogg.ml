@@ -62,7 +62,7 @@ struct
 
   external version : t -> int = "ocaml_ogg_page_version"
 
-  external granulepos : t -> int = "ocaml_ogg_page_granulepos"
+  external granulepos : t -> Int64.t = "ocaml_ogg_page_granulepos"
 
   external pageno : t -> int = "ocaml_ogg_page_pageno"
 
