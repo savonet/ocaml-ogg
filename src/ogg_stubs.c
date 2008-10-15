@@ -83,7 +83,7 @@ CAMLprim value ocaml_ogg_page_serialno(value page)
 {
   CAMLparam1(page);
   ogg_page op;
-  CAMLreturn(Val_int(ogg_page_serialno(page_of_value(page,&op))));
+  CAMLreturn(Val_long(ogg_page_serialno(page_of_value(page,&op))));
 }
 
 CAMLprim value ocaml_ogg_page_eos(value page)
@@ -132,7 +132,7 @@ CAMLprim value ocaml_ogg_page_pageno(value page)
 {
   CAMLparam1(page);
   ogg_page op;
-  CAMLreturn(Val_int(ogg_page_pageno(page_of_value(page,&op))));
+  CAMLreturn(Val_long(ogg_page_pageno(page_of_value(page,&op))));
 }
 
 CAMLprim value ocaml_ogg_page_checksum_set(value page)
