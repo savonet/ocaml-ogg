@@ -132,7 +132,7 @@ CAMLprim value ocaml_ogg_page_pageno(value page)
 {
   CAMLparam1(page);
   ogg_page op;
-  CAMLreturn(caml_copy_int32(ogg_page_pageno(page_of_value(page,&op))));
+  CAMLreturn(caml_copy_nativeint(ogg_page_pageno(page_of_value(page,&op))));
 }
 
 CAMLprim value ocaml_ogg_page_checksum_set(value page)

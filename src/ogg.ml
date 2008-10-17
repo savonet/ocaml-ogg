@@ -64,7 +64,7 @@ struct
 
   external granulepos : t -> Int64.t = "ocaml_ogg_page_granulepos"
 
-  external pageno : t -> int32 = "ocaml_ogg_page_pageno"
+  external pageno : t -> nativeint = "ocaml_ogg_page_pageno"
 
   external set_checksum : t -> unit = "ocaml_ogg_page_checksum_set"
 

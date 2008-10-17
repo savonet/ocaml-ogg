@@ -110,7 +110,7 @@ sig
     * Returns the sequential page number. 
     * 
     * This is useful for ordering pages or determining when pages have been lost. *)
-  val pageno : t -> int32
+  val pageno : t -> nativeint
 
   (**
     * Checksums an ogg_page. *)
