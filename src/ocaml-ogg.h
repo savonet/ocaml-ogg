@@ -38,4 +38,5 @@
 
 
 value value_of_page(ogg_page *op);
+value value_of_packet(ogg_packet *op);
 ogg_page *page_of_value(value v, ogg_page *op);

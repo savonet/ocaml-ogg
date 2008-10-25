@@ -254,6 +254,15 @@ static struct custom_operations packet_ops =
   custom_deserialize_default
 };
 
+value value_of_packet(ogg_packet *op)
+{
+  CAMLparam0();
+  CAMLlocal1(packet);
+  packet = caml_alloc_custom(&packet_ops, sizeof(ogg_packet*), 1, 0);
+  Packet_val(packet) = copy_packet(op);
+  CAMLreturn(packet);
+}
+
 CAMLprim value ocaml_ogg_stream_init(value serial)
 {
   CAMLparam0();
@@ -301,7 +310,6 @@ CAMLprim value ocaml_ogg_stream_pagein(value o_stream_state, value page)
 CAMLprim value ocaml_ogg_stream_packetout(value callback,value o_stream_state)
 {
   CAMLparam2(callback,o_stream_state);
-  CAMLlocal1(packet);
   ogg_stream_state *os = Stream_state_val(o_stream_state);
   ogg_packet op;
   int ret = ogg_stream_packetout(os,&op);
@@ -312,16 +320,12 @@ CAMLprim value ocaml_ogg_stream_packetout(value callback,value o_stream_state)
   if (ret == -1)
     caml_callback(callback,Val_unit);
 
-  packet = caml_alloc_custom(&packet_ops, sizeof(ogg_packet*), 1, 0);
-  Packet_val(packet) = copy_packet(&op);
-
-  CAMLreturn(packet);
+  CAMLreturn(value_of_packet(&op));
 }
 
 CAMLprim value ocaml_ogg_stream_packetpeek(value o_stream_state)
 {
   CAMLparam1(o_stream_state);
-  CAMLlocal1(packet);
   ogg_stream_state *os = Stream_state_val(o_stream_state);
   ogg_packet op;
   int ret = ogg_stream_packetpeek(os,&op);
@@ -329,10 +333,7 @@ CAMLprim value ocaml_ogg_stream_packetpeek(value o_stream_state)
   if (ret == 0)
     caml_raise_constant(*caml_named_value("ogg_exn_not_enough_data"));
 
-  packet = caml_alloc_custom(&packet_ops, sizeof(ogg_packet*), 1, 0);
-  Packet_val(packet) = copy_packet(&op);
-
-  CAMLreturn(packet);
+  CAMLreturn(value_of_packet(&op));
 }
 
 CAMLprim value ocaml_ogg_flush_stream(value o_stream_state)
