@@ -92,6 +92,8 @@ struct
 
   external peek_packet : stream -> packet = "ocaml_ogg_stream_packetpeek"
 
+  external put_packet : stream -> packet -> unit = "ocaml_ogg_stream_packetin"
+
   external put_page : stream -> Page.t -> unit = "ocaml_ogg_stream_pagein"
 
   external flush_page : stream -> Page.t = "ocaml_ogg_flush_stream"

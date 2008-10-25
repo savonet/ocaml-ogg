@@ -307,6 +307,17 @@ CAMLprim value ocaml_ogg_stream_pagein(value o_stream_state, value page)
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value ocaml_ogg_stream_packetin(value o_stream_state, value packet)
+{
+  CAMLparam2(o_stream_state, packet);
+  ogg_stream_state *os = Stream_state_val(o_stream_state);
+
+  if (ogg_stream_packetin(os, Packet_val(packet)) != 0)
+    caml_raise_constant(*caml_named_value("ogg_exn_bad_data"));
+
+  CAMLreturn(Val_unit);
+}
+
 CAMLprim value ocaml_ogg_stream_packetout(value callback,value o_stream_state)
 {
   CAMLparam2(callback,o_stream_state);

@@ -222,6 +222,14 @@ sig
   val peek_packet : stream -> packet
 
   (**
+    * This function submits a packet to the bitstream for page encapsulation. 
+    * After this is called, more packets can be submitted, or pages can be written out.
+    *
+    * This function is provided to ease ogg strea multiplexing, where packet submission
+    * order is important. It should not be used to encoder further data. *)
+  val put_packet : stream -> packet -> unit
+
+  (**
     * This function checks for remaining packets inside the stream and forces
     * remaining packets into a page, regardless of the size of the page.
     *
