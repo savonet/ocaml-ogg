@@ -233,6 +233,8 @@ static void finalize_packet(value s)
 static inline ogg_packet *copy_packet(ogg_packet *op)
 {
   ogg_packet *nop = malloc(sizeof(ogg_packet));
+  if (nop == NULL)
+    caml_failwith("malloc");
   nop->packet = malloc(op->bytes);
   memcpy(nop->packet,op->packet,op->bytes);
   nop->bytes = op->bytes;
@@ -358,4 +360,96 @@ CAMLprim value ocaml_ogg_flush_stream(value o_stream_state)
 
   CAMLreturn(value_of_page(&og));
 }
+
+CAMLprim value ocaml_ogg_stream_serialno(value o_stream_state)
+{
+  CAMLparam1(o_stream_state);
+  ogg_stream_state *os = Stream_state_val(o_stream_state);
+
+  CAMLreturn(caml_copy_nativeint((intnat)os->serialno));
+}
+
+/* Ogg skeleton helpers */
+
+/* Values from http://xiph.org/ogg/doc/skeleton.html */
+#define SKELETON_VERSION_MAJOR 3
+#define SKELETON_VERSION_MINOR 0
+#define FISHEAD_IDENTIFIER "fishead\0"
+
+/* Wrappers */
+static void write16le(unsigned char *ptr,ogg_uint16_t v)
+{
+  ptr[0]=v&0xff;
+  ptr[1]=(v>>8)&0xff;
+}
+
+static void write32le(unsigned char *ptr,ogg_uint32_t v)
+{
+  ptr[0]=v&0xff;
+  ptr[1]=(v>>8)&0xff;
+  ptr[2]=(v>>16)&0xff;
+  ptr[3]=(v>>24)&0xff;
+}
+
+static void write64le(unsigned char *ptr,ogg_int64_t v)
+{
+  ogg_uint32_t hi=v>>32;
+  ptr[0]=v&0xff;
+  ptr[1]=(v>>8)&0xff;
+  ptr[2]=(v>>16)&0xff;
+  ptr[3]=(v>>24)&0xff;
+  ptr[4]=hi&0xff;
+  ptr[5]=(hi>>8)&0xff;
+  ptr[6]=(hi>>16)&0xff;
+  ptr[7]=(hi>>24)&0xff;
+}
+
+/* Code from theorautils.c in ffmpeg2theora */
+CAMLprim value ocaml_ogg_skeleton_fishead(value pres_num, value pres_den, value base_num, value base_den, value time)
+{
+  CAMLparam0();
+  CAMLlocal1(packet);
+  ogg_packet op;
+
+  memset (&op, 0, sizeof (op));
+
+  op.packet = malloc (64);
+  if (op.packet == NULL)
+    caml_failwith("malloc");
+
+  memset (op.packet, 0, 64);
+  memcpy (op.packet, FISHEAD_IDENTIFIER, 8); /* identifier */
+  write16le(op.packet+8, SKELETON_VERSION_MAJOR); /* version major */
+  write16le(op.packet+10, SKELETON_VERSION_MINOR); /* version minor */
+  write64le(op.packet+12, (ogg_int64_t)Int64_val(pres_num)); /* presentationtime numerator */
+  write64le(op.packet+20, (ogg_int64_t)Int64_val(pres_den)); /* presentationtime denominator */
+  write64le(op.packet+28, (ogg_int64_t)Int64_val(base_num)); /* basetime numerator */
+  write64le(op.packet+36, (ogg_int64_t)Int64_val(base_den)); /* basetime denominator */
+  /* both the numerator are zero hence handled by the memset */
+  write32le(op.packet+44, Int32_val(time)); /* UTC time, set to zero for now */
+
+  op.b_o_s = 1; /* its the first packet of the stream */
+  op.e_o_s = 0; /* its not the last packet of the stream */
+  op.bytes = 64; /* length of the packet in bytes */
+
+  packet = value_of_packet(&op);
+  free(op.packet);
+  CAMLreturn(packet);
+}
+
+/* Code from theorautils.c from ffmpeg2theora */
+CAMLprim value ocaml_ogg_skeleton_eos(value v)
+{
+  CAMLparam0();
+  ogg_packet op;
+
+  /* build the e_o_s packet */
+  memset (&op, 0, sizeof (op));
+  op.b_o_s = 0;
+  op.e_o_s = 1; /* its the e_o_s packet */
+  op.granulepos = 0;
+  op.bytes = 0; /* e_o_s packet is an empty packet */  
+
+  CAMLreturn(value_of_packet(&op));
+} 
 

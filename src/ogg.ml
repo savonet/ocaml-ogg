@@ -80,6 +80,8 @@ struct
 
   let create ?(serial = Random.nativeint (Nativeint.of_int 0x3FFFFFFF)) () = create serial
 
+  external serialno : stream -> nativeint = "ocaml_ogg_stream_serialno"
+
   external eos : stream -> bool = "ocaml_ogg_stream_eos"
 
   external get_page : stream -> Page.t = "ocaml_ogg_stream_pageout"
@@ -178,3 +180,20 @@ struct
 
 end
 
+
+module Skeleton = 
+struct
+
+  external fishead : Int64.t -> Int64.t -> Int64.t -> Int64.t -> Int32.t -> Stream.packet = "ocaml_ogg_skeleton_fishead"
+
+  let fishead ?(presentation_numerator=Int64.zero) 
+              ?(presentation_denominator=Int64.of_int 1000)
+              ?(basetime_numerator=Int64.zero) 
+              ?(basetime_denominator=Int64.of_int 1000) 
+              ?(utc=Int32.zero) () =
+    fishead presentation_numerator presentation_denominator
+            basetime_numerator basetime_denominator utc
+
+  external eos : unit -> Stream.packet = "ocaml_ogg_skeleton_eos"
+
+end

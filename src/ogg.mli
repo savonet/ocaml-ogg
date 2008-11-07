@@ -165,6 +165,11 @@ sig
     *)
   val create : ?serial:nativeint -> unit -> stream
 
+  (** 
+    * Get a stream's serial number.
+    *)
+  val serialno : stream -> nativeint
+
   (** Returns true if the end of stream has been reached. *)
   val eos : stream -> bool
 
@@ -257,3 +262,22 @@ sig
 
 end
 
+module Skeleton : 
+sig
+
+  (**
+    * Create an initial ogg skeleton packet ('fishead'),
+    * to complete with data packet from the various codecs
+    * in the stream ('fishbone').
+    * See: http://xiph.org/ogg/doc/skeleton.html. *)
+  val fishead :
+    ?presentation_numerator:Int64.t ->
+    ?presentation_denominator:Int64.t ->
+    ?basetime_numerator:Int64.t ->
+    ?basetime_denominator:Int64.t -> ?utc:Int32.t -> unit -> Stream.packet
+
+ (** Create an end-of-stream packet for
+   * an ogg skeleton logical stream *)
+ val eos : unit -> Stream.packet
+
+end
