@@ -1,4 +1,4 @@
-0.2.1 ()
+0.3.0 ()
 =====
 * Added file descriptor to Ogg.Sync.create_from_file
   in order to be able to close it and let the Gc clean
