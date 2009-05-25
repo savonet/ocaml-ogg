@@ -30,6 +30,7 @@ LIBINSTALL_FILES = $(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so *.h)
 ACLIBS = @LIBS@ @libogg_LIBS@
 LDFLAGS = @LDFLAGS@ @libogg_LDFLAGS@
 CLIBS = $(ACLIBS:-l%=%)
+LIBDIRS = $(LDFLAGS:-L%=%)
 CC = @CC@
 CFLAGS = @CFLAGS@ @libogg_CFLAGS@ -Wall -DCAML_NAME_SPACE
 CPPFLAGS = @CPPFLAGS@
