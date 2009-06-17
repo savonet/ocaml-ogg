@@ -1,5 +1,6 @@
 0.3.1 ()
 =====
+* Added support for --enable-debugging configure option
 * Added NO_CUSTOM to build
   in standard mode.
 * Added prefix to main compilation variables
