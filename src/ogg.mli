@@ -212,10 +212,8 @@ sig
     *
     * Raises [Not_enough_data] if more data is needed and another page should be submitted.
     *
-    * Raises [Out_of_sync]  if we are out of sync and there is a gap in the data
-    *
-    * [sync] is a reference to a boolean set to true if the stream had a gap. *)
-  val get_packet : ?sync:(bool ref) -> stream -> packet
+    * Raises [Out_of_sync]  if we are out of sync and there is a gap in the data. *)
+  val get_packet : stream -> packet
 
   (**
     * This function assembles a data packet for output

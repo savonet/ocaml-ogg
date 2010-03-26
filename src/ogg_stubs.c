@@ -320,9 +320,9 @@ CAMLprim value ocaml_ogg_stream_packetin(value o_stream_state, value packet)
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value ocaml_ogg_stream_packetout(value callback,value o_stream_state)
+CAMLprim value ocaml_ogg_stream_packetout(value o_stream_state)
 {
-  CAMLparam2(callback,o_stream_state);
+  CAMLparam1(o_stream_state);
   ogg_stream_state *os = Stream_state_val(o_stream_state);
   ogg_packet op;
   int ret = ogg_stream_packetout(os,&op);
@@ -330,9 +330,9 @@ CAMLprim value ocaml_ogg_stream_packetout(value callback,value o_stream_state)
   if (ret == 0) 
     caml_raise_constant(*caml_named_value("ogg_exn_not_enough_data"));
 
-  if (ret == -1)
-    caml_callback(callback,Val_unit);
-
+  if (ret == -1) 
+    caml_raise_constant(*caml_named_value("ogg_exn_out_of_sync"));
+  
   CAMLreturn(value_of_packet(&op));
 }
 

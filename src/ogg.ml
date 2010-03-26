@@ -86,11 +86,7 @@ struct
 
   external get_page : stream -> Page.t = "ocaml_ogg_stream_pageout"
 
-  external get_packet : (unit -> unit) -> stream -> packet = "ocaml_ogg_stream_packetout"
-
-  let get_packet ?(sync=ref false) s = 
-    let callback () = sync := true in
-    get_packet callback s
+  external get_packet : stream -> packet = "ocaml_ogg_stream_packetout"
 
   external peek_packet : stream -> packet = "ocaml_ogg_stream_packetpeek"
 
