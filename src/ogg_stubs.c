@@ -234,7 +234,7 @@ static inline ogg_packet *copy_packet(ogg_packet *op)
 {
   ogg_packet *nop = malloc(sizeof(ogg_packet));
   if (nop == NULL)
-    caml_failwith("malloc");
+    caml_raise_out_of_memory();
   nop->packet = malloc(op->bytes);
   memcpy(nop->packet,op->packet,op->bytes);
   nop->bytes = op->bytes;
@@ -415,7 +415,7 @@ CAMLprim value ocaml_ogg_skeleton_fishead(value pres_num, value pres_den, value 
 
   op.packet = malloc (64);
   if (op.packet == NULL)
-    caml_failwith("malloc");
+    caml_raise_out_of_memory();
 
   memset (op.packet, 0, 64);
   memcpy (op.packet, FISHEAD_IDENTIFIER, 8); /* identifier */
