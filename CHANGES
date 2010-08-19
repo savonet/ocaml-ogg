@@ -1,4 +1,4 @@
-0.4.0 ()
+0.4.0 (19-08-2010)
 =====
 * Removed sync reference in Stream.get_packet 
   and actually raise Out_of_sync exception. 
