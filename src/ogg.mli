@@ -137,7 +137,8 @@ sig
   (** 
     * Read a page from [Sync.t] 
     *
-    * Raises [Not_enough_data] if the reading function returned an empty string. *)
+    * Raises [Not_enough_data] if the reading function returned an empty string. 
+    * Raises [Out_of_sync] if data is not synced and some byte where skiped. *)
   val read : t -> Page.t
 
   (** 

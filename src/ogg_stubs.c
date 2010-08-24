@@ -188,9 +188,12 @@ CAMLprim value ocaml_ogg_sync_read(value callback, value oy)
   ogg_sync_state *sync = Sync_state_val(oy);
   int len = 4096;
   ogg_page page;
+  int ans = ogg_sync_pageout(sync, &page);
 
-  while (ogg_sync_pageout(sync, &page) != 1)
+  while (ans != 1)
   {
+    if (ans == -1)
+      caml_raise_constant(*caml_named_value("ogg_exn_out_of_sync"));
     ret = caml_callback(callback,Val_int(len));
     s = Field(ret,0);
     bytes = Field(ret,1);
@@ -200,6 +203,7 @@ CAMLprim value ocaml_ogg_sync_read(value callback, value oy)
     char *buffer = ogg_sync_buffer(sync,Int_val(bytes));
     memcpy(buffer,String_val(s),Int_val(bytes));
     ogg_sync_wrote(sync,Int_val(bytes));
+    ans = ogg_sync_pageout(sync, &page);
   }
 
   CAMLreturn(value_of_page(&page));

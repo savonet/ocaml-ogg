@@ -1,3 +1,9 @@
+0.4.1 ()
+=====
+* Raise Out_of_sync in Sync.read
+  when data is not synced, e.g.
+  ogg_sync_pageout returned -1.
+
 0.4.0 (19-08-2010)
 =====
 * Removed sync reference in Stream.get_packet 
