@@ -1,4 +1,4 @@
-0.4.1 ()
+0.4.1 (04-09-2010)
 =====
 * Raise Out_of_sync in Sync.read
   when data is not synced, e.g.
