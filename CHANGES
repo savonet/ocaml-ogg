@@ -1,3 +1,8 @@
+0.5.0 ()
+=====
+* Added Ogg_demuxer module to
+  decode ogg streams.
+
 0.4.1 (04-09-2010)
 =====
 * Raise Out_of_sync in Sync.read

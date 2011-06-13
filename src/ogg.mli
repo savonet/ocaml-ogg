@@ -1,5 +1,5 @@
 (*
- * Copyright 2007 Samuel Mimram
+ * Copyright 2007-2011 Savonet team
  *
  * This file is part of ocaml-ogg.
  *
@@ -40,6 +40,7 @@
 exception Not_enough_data
 exception Bad_data
 exception Out_of_sync
+exception End_of_stream
 
 (**
   * The [page] struct encapsulates the data for an Ogg page.
@@ -137,15 +138,24 @@ sig
   (** 
     * Read a page from [Sync.t] 
     *
-    * Raises [Not_enough_data] if the reading function returned an empty string. 
+    * Raises [End_of_stream] if the reading function returned an empty string. 
     * Raises [Out_of_sync] if data is not synced and some byte where skiped. *)
   val read : t -> Page.t
 
   (** 
-    * This function is used to reset the internal counters of the [Sync.t] to initial values.
+    * This function is used to reset the internal counters of the 
+    * [Sync.t] to initial values. 
     *
     * [read_func] is optional and is a new function to read new data. *)
   val reset : ?read_func:(int -> string*int) -> t -> unit
+
+  (** 
+    * This function synchronizes the ogg_sync_state struct to the next ogg_page.
+    * 
+    * This is useful when seeking within a bitstream. page_seek will synchronize 
+    * to the next page in the bitstream and return information about how many bytes 
+    * we advanced or skipped in order to do so. *)
+  val seek : t -> Page.t
 end
 
 
@@ -225,6 +235,21 @@ sig
     * Raises [Out_of_sync]  if we are out of sync and there is a gap in the data *)
   val peek_packet : stream -> packet
 
+  (** This function picks up the granule position
+    * of the next packet in the stream without advancing it.
+    *
+    * Raises [Not_enough_data] if more data is needed and another page should be submitted.
+    *
+    * Raises [Out_of_sync]  if we are out of sync and there is a gap in the data *)
+  val peek_granulepos : stream -> Int64.t
+
+  (** This function discards the next packet in the stream.
+    *
+    * Raises [Not_enough_data] if more data is needed and another page should be submitted.
+    *
+    * Raises [Out_of_sync]  if we are out of sync and there is a gap in the data *)
+  val skip_packet : stream -> unit
+
   (**
     * This function submits a packet to the bitstream for page encapsulation. 
     * After this is called, more packets can be submitted, or pages can be written out.
@@ -246,6 +271,9 @@ sig
     * and there are no packets to put into the page.
     *)
   val flush_page : stream -> Page.t
+
+  (** Returns a packet's granule position. *)
+  val packet_granulepos : packet -> Int64.t
 
   (** Backward compatibility *)
 

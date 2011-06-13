@@ -181,6 +181,32 @@ CAMLprim value ocaml_ogg_sync_reset(value oy)
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value ocaml_ogg_sync_pageseek(value callback, value oy)
+{
+  CAMLparam2(callback,oy);
+  CAMLlocal3(ret,s,bytes);
+  ogg_sync_state *sync = Sync_state_val(oy);
+  int len = 4096;
+  ogg_page page;
+  int err = ogg_sync_pageseek(sync, &page);
+
+  while (err <= 0)
+  {
+    ret = caml_callback(callback,Val_int(len));
+    s = Field(ret,0);
+    bytes = Field(ret,1);
+    if (Int_val(bytes) == 0)
+      caml_raise_constant(*caml_named_value("ogg_exn_eos"));
+    
+    char *buffer = ogg_sync_buffer(sync,Int_val(bytes));
+    memcpy(buffer,String_val(s),Int_val(bytes));
+    ogg_sync_wrote(sync,Int_val(bytes));
+    err = ogg_sync_pageseek(sync, &page);
+  }
+
+  CAMLreturn(value_of_page(&page));
+}
+
 CAMLprim value ocaml_ogg_sync_read(value callback, value oy)
 {
   CAMLparam2(callback,oy);
@@ -198,7 +224,7 @@ CAMLprim value ocaml_ogg_sync_read(value callback, value oy)
     s = Field(ret,0);
     bytes = Field(ret,1);
     if (Int_val(bytes) == 0)
-      caml_raise_constant(*caml_named_value("ogg_exn_not_enough_data"));
+      caml_raise_constant(*caml_named_value("ogg_exn_eos"));
 
     char *buffer = ogg_sync_buffer(sync,Int_val(bytes));
     memcpy(buffer,String_val(s),Int_val(bytes));
@@ -340,6 +366,22 @@ CAMLprim value ocaml_ogg_stream_packetout(value o_stream_state)
   CAMLreturn(value_of_packet(&op));
 }
 
+CAMLprim value ocaml_ogg_stream_packet_advance(value o_stream_state)
+{
+  CAMLparam1(o_stream_state);
+  ogg_stream_state *os = Stream_state_val(o_stream_state);
+  ogg_packet op;
+  int ret = ogg_stream_packetout(os,&op);
+
+  if (ret == 0)
+    caml_raise_constant(*caml_named_value("ogg_exn_not_enough_data"));
+
+  if (ret == -1)
+    caml_raise_constant(*caml_named_value("ogg_exn_out_of_sync"));
+
+  CAMLreturn(Val_unit);
+}
+
 CAMLprim value ocaml_ogg_stream_packetpeek(value o_stream_state)
 {
   CAMLparam1(o_stream_state);
@@ -350,7 +392,34 @@ CAMLprim value ocaml_ogg_stream_packetpeek(value o_stream_state)
   if (ret == 0)
     caml_raise_constant(*caml_named_value("ogg_exn_not_enough_data"));
 
+  if (ret == -1)
+    caml_raise_constant(*caml_named_value("ogg_exn_out_of_sync"));
+
   CAMLreturn(value_of_packet(&op));
+}
+
+CAMLprim value ocaml_ogg_stream_granulepospeek(value o_stream_state)
+{
+  CAMLparam1(o_stream_state);
+  ogg_stream_state *os = Stream_state_val(o_stream_state);
+  ogg_packet op;
+  int ret = ogg_stream_packetpeek(os,&op);
+
+  if (ret == 0)
+    caml_raise_constant(*caml_named_value("ogg_exn_not_enough_data"));
+
+  if (ret == -1)
+    caml_raise_constant(*caml_named_value("ogg_exn_out_of_sync"));
+
+  CAMLreturn(caml_copy_int64(op.granulepos));
+}
+
+CAMLprim value ocaml_ogg_stream_packet_granulepos(value _op)
+{
+  CAMLparam1(_op);
+  ogg_packet *op = Packet_val(_op);
+
+  CAMLreturn(caml_copy_int64(op->granulepos));
 }
 
 CAMLprim value ocaml_ogg_flush_stream(value o_stream_state)

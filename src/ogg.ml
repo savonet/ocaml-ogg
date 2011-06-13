@@ -1,5 +1,5 @@
 (*
- * Copyright 2007 Samuel Mimram
+ * Copyright 2007-2011 Savonet team
  *
  * This file is part of ocaml-ogg.
  *
@@ -40,11 +40,13 @@
 exception Not_enough_data
 exception Bad_data
 exception Out_of_sync
+exception End_of_stream
 
 let () =
   Callback.register_exception "ogg_exn_not_enough_data" Not_enough_data ;
   Callback.register_exception "ogg_exn_bad_data" Bad_data ;
-  Callback.register_exception "ogg_exn_out_of_sync" Out_of_sync 
+  Callback.register_exception "ogg_exn_out_of_sync" Out_of_sync ;
+  Callback.register_exception "ogg_exn_eos" End_of_stream
 
 module Page = 
 struct
@@ -76,6 +78,8 @@ struct
 
   type packet
 
+  external packet_granulepos : packet -> Int64.t = "ocaml_ogg_stream_packet_granulepos"
+
   external create : nativeint -> stream = "ocaml_ogg_stream_init"
 
   let create ?(serial = Random.nativeint (Nativeint.of_int 0x3FFFFFFF)) () = create serial
@@ -89,6 +93,10 @@ struct
   external get_packet : stream -> packet = "ocaml_ogg_stream_packetout"
 
   external peek_packet : stream -> packet = "ocaml_ogg_stream_packetpeek"
+
+  external peek_granulepos : stream -> Int64.t = "ocaml_ogg_stream_granulepospeek"
+
+  external skip_packet : stream -> unit = "ocaml_ogg_stream_packet_advance"
 
   external put_packet : stream -> packet -> unit = "ocaml_ogg_stream_packetin"
 
@@ -174,6 +182,11 @@ struct
       | None -> x := (f,s)
       | Some v -> x := (v,s)
 
+  external seek : (int -> string*int) -> sync -> Page.t = "ocaml_ogg_sync_pageseek"
+
+  let seek x = 
+    let (f,s) = !x in
+    seek f s
 end
 
 
