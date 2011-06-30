@@ -703,12 +703,22 @@ let decode_audio dec dtype f =
       | Audio d -> d.decode f 
       | _ -> assert false
   with
-    | Ogg.End_of_stream -> 
+    | Ogg.End_of_stream
+    (* In very rare cases (e.g. with a track that
+     * does not have any data to decode), [Ogg.Not_enough_data]
+     * may be raised at the end of the track instead of 
+     * [Ogg.End_of_stream]. Thus, we also catch it here
+     * but re-raise it if the track has not ended yet. *)
+    | Ogg.Not_enough_data as e -> 
         if ended then
          begin
           log dec "All data from stream %nx has been decoded" id;
           Hashtbl.remove dec.finished_streams id
-         end;
+         end
+        (* Reraise [Ogg.Not_enough_data] to feed the
+         * decoder. *)
+        else if e = Ogg.Not_enough_data then
+           raise e;
         if eos dec then
           raise Ogg.End_of_stream
 
@@ -723,13 +733,18 @@ let decode_video dec dtype f =
       | Video d -> d.decode f
       | _ -> assert false
   with
-    | Ogg.End_of_stream -> 
+    | Ogg.End_of_stream 
+    | Ogg.Not_enough_data as e -> 
         if ended then
          begin
           log dec "All data from stream %nx has been decoded: \
                    droping stream." id;
           Hashtbl.remove dec.finished_streams id
-         end;
+         end
+        (* Reraise [Ogg.Not_enough_data] to feed the
+         * decoder. *)
+        else if e = Ogg.Not_enough_data then
+           raise e;
         if eos dec then
           raise Ogg.End_of_stream
 
