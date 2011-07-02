@@ -1,7 +1,14 @@
-0.5.0 ()
+0.4.2 (02.07.2011)
 =====
-* Added Ogg_demuxer module to
+* Added [Ogg_demuxer] module to
   decode ogg streams.
+* Added the following functions:
+  - [Sync.sync]
+  - [Stream.{peek_granulepos,
+             skip_packet,
+             packet_granulepos}]
+* Fixed incorrect mention of INRIA in 
+  license headers.
 
 0.4.1 (04-09-2010)
 =====
