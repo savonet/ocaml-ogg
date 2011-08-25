@@ -116,6 +116,12 @@ exception Track of (bool*nativeint*stream)
 exception Invalid_stream
 exception Not_available
 
+(* This exception has a different semantics than [Ogg.End_of_stream].
+ * [Ogg.End_of_stream] is raised when end of data has been reached,
+ * while this exception is raised when end of a logical stream has 
+ * been reached.. *)
+exception End_of_stream
+
 type register_decoder =
   (Ogg.Stream.packet -> bool) * (Ogg.Stream.t -> decoders)
 
@@ -218,7 +224,7 @@ let feed_page ~position decoder page =
 
 let get_page decoder =
   if eos decoder then
-    raise Ogg.End_of_stream ;
+    raise End_of_stream ;
   let position = 
     match decoder.callbacks.tell with
       | None -> None
@@ -562,7 +568,7 @@ let seek ?(relative=false) dec time =
      (get_tracks dec =  []) then
     raise Not_available ;
   if eos dec then
-    raise Ogg.End_of_stream ;
+    raise End_of_stream ;
   let orig_time = get_position dec in
   if relative then
     log dec "Seeking to %.02f sec from current position \
@@ -659,9 +665,9 @@ let seek ?relative dec time =
   try
     seek ?relative dec time
   with
-    | Ogg.End_of_stream -> 
+    | End_of_stream -> 
         abort dec;
-        raise Ogg.End_of_stream
+        raise End_of_stream
 
 let incr_pos dec stream len = 
   let (x,y) = sample_rate_priv stream.dec dec in
@@ -703,11 +709,11 @@ let decode_audio dec dtype f =
       | Audio d -> d.decode f 
       | _ -> assert false
   with
-    | Ogg.End_of_stream
+    | End_of_stream
     (* In very rare cases (e.g. with a track that
      * does not have any data to decode), [Ogg.Not_enough_data]
      * may be raised at the end of the track instead of 
-     * [Ogg.End_of_stream]. Thus, we also catch it here
+     * [End_of_stream]. Thus, we also catch it here
      * but re-raise it if the track has not ended yet. *)
     | Ogg.Not_enough_data as e -> 
         if ended then
@@ -720,7 +726,7 @@ let decode_audio dec dtype f =
         else if e = Ogg.Not_enough_data then
            raise e;
         if eos dec then
-          raise Ogg.End_of_stream
+          raise End_of_stream
 
 let decode_video dec dtype f =
   let (ended,id,stream) = get_track dec dtype in
@@ -733,7 +739,7 @@ let decode_video dec dtype f =
       | Video d -> d.decode f
       | _ -> assert false
   with
-    | Ogg.End_of_stream 
+    | End_of_stream 
     | Ogg.Not_enough_data as e -> 
         if ended then
          begin
@@ -746,7 +752,7 @@ let decode_video dec dtype f =
         else if e = Ogg.Not_enough_data then
            raise e;
         if eos dec then
-          raise Ogg.End_of_stream
+          raise End_of_stream
 
 let decode_rec g dec dtype f =
   let rec exec () =

@@ -116,6 +116,12 @@ type video_data =
 exception Invalid_stream
 exception Not_available
 
+(* This exception has a different semantics than [Ogg.End_of_stream].
+ * [Ogg.End_of_stream] is raised when end of data has been reached,
+ * while this exception is raised when end of a logical stream has
+ * been reached.. *)
+exception End_of_stream
+
 (** {3 Initialization functions } *)
 
 (** Initiate a decoder with the given callbacks. 
@@ -201,7 +207,7 @@ val can_seek : t -> bool
   * Raises [Not_available] if seeking is
   * not possible.
   *
-  * Raises [Ogg.End_of_stream] if the end of
+  * Raises [End_of_stream] if the end of
   * current stream has been reached while
   * seeking. You may call [reset] in this
   * situation to see if there is a new seqentialized
@@ -216,7 +222,7 @@ val seek : ?relative:bool -> t -> float -> float
 (** Decode audio data, if possible. 
   * Decoded data is passed to the second argument. 
   *
-  * Raises [Ogg.End_of_stream] if all stream have ended.
+  * Raises [End_of_stream] if all stream have ended.
   * In this case, you can try [reset] to see if there is a
   * new sequentialized stream. *)
 val decode_audio : t -> track -> (audio_data -> unit) -> unit
@@ -224,7 +230,7 @@ val decode_audio : t -> track -> (audio_data -> unit) -> unit
 (** Decode video data, if possible. 
   * Decoded data is passed to the second argument. 
   *
-  * Raises [Ogg.End_of_stream] if all streams have ended.
+  * Raises [End_of_stream] if all streams have ended.
   * In this case, you can try [reset] to see if there is a
   * new sequentialized stream. *)
 val decode_video : t -> track -> (video_data -> unit) -> unit 
