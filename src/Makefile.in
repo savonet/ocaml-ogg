@@ -29,12 +29,12 @@ SOURCES = ogg.mli ogg.ml ogg_stubs.c ogg_demuxer.mli ogg_demuxer.ml
 RESULT = ogg
 OCAMLDOCFLAGS = -stars
 LIBINSTALL_FILES = $(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so *.h)
-ACLIBS = @LIBS@ @libogg_LIBS@
-LDFLAGS = @LDFLAGS@ @libogg_LDFLAGS@
+ACLIBS = @LIBS@
+LDFLAGS = @LDFLAGS@
 CLIBS = $(ACLIBS:-l%=%)
 LIBDIRS = $(LDFLAGS:-L%=%)
 CC = @CC@
-CFLAGS = @CFLAGS@ @libogg_CFLAGS@ -Wall -DCAML_NAME_SPACE
+CFLAGS = @CFLAGS@ -Wall -DCAML_NAME_SPACE
 CPPFLAGS = @CPPFLAGS@
 NO_CUSTOM = yes
 OCAMLFLAGS = @OCAMLFLAGS@
