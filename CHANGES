@@ -1,6 +1,8 @@
-0.5.0 ()
+0.4.3 (04-10-2011)
 =====
-* New End_of_stream exception
+* New Ogg_demuxer.End_of_stream exception, raised at the end of
+  logical streams. The former incorrect behavior was to raise
+  Ogg.End_of_stream, which is intended to signify the end of data.
 
 0.4.2 (02.07.2011)
 =====
