@@ -41,12 +41,14 @@ exception Not_enough_data
 exception Bad_data
 exception Out_of_sync
 exception End_of_stream
+exception Internal_error
 
 let () =
   Callback.register_exception "ogg_exn_not_enough_data" Not_enough_data ;
   Callback.register_exception "ogg_exn_bad_data" Bad_data ;
   Callback.register_exception "ogg_exn_out_of_sync" Out_of_sync ;
-  Callback.register_exception "ogg_exn_eos" End_of_stream
+  Callback.register_exception "ogg_exn_eos" End_of_stream ;
+  Callback.register_exception "ogg_exn_internal_error" Internal_error
 
 module Page = 
 struct

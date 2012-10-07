@@ -41,6 +41,7 @@ exception Not_enough_data
 exception Bad_data
 exception Out_of_sync
 exception End_of_stream
+exception Internal_error
 
 (**
   * The [page] struct encapsulates the data for an Ogg page.
