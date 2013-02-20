@@ -1,6 +1,7 @@
-0.4.4 ()
+0.4.4 (18-02-2013)
 =====
 * Added Ogg.Internal_error exception.
+* Updated configure.
 
 0.4.3 (04-10-2011)
 =====
