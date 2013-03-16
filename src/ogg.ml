@@ -90,7 +90,14 @@ struct
 
   external eos : stream -> bool = "ocaml_ogg_stream_eos"
 
-  external get_page : stream -> Page.t = "ocaml_ogg_stream_pageout"
+  external get_page : stream -> unit -> Page.t = "ocaml_ogg_stream_pageout"
+
+  external get_page_fill : stream -> int -> Page.t = "ocaml_ogg_stream_pageout"
+
+  let get_page ?fill os =
+    match fill with
+      | Some bytes -> get_page_fill os bytes
+      | None       -> get_page os ()
 
   external get_packet : stream -> packet = "ocaml_ogg_stream_packetout"
 

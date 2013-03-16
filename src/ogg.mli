@@ -190,14 +190,22 @@ sig
     * it assembles the accumulated packet bodies into an Ogg page
     * suitable for writing to a stream.
     *
-    * This function will only return a page when a "reasonable" amount of packet
-    * data is available. Normally this is appropriate since it limits the overhead
-    * of the Ogg page headers in the bitstream. Call
-    * [flush_page] if immediate page generation is desired. This may be
-    * occasionally necessary, for example, to limit the temporal latency of a
-    * variable bitrate stream.
+    * If no [fill] argument is passed, this function will only return 
+    * a page when a "reasonable" amount of packet data is available. 
+    * Normally this is appropriate since it limits the overhead of the 
+    * Ogg page headers in the bitstream. 
+    *
+    * If a [fill] argument is passed, this function will return a page when at
+    * least four packets have been accumulated and accumulated packet data meets
+    * or exceeds the specified number of bytes, and/or when the accumulated
+    * packet data meets/exceeds the maximum page size regardless of accumulated
+    * packet count.
+    *
+    * Call [flush_page] if immediate  page generation is desired. This 
+    * may be occasionally necessary, for example, to limit the temporal 
+    * latency of a variable bitrate stream.
     *)
-  val get_page : stream -> Page.t
+  val get_page : ?fill:int -> stream -> Page.t
 
   (** 
     * This function adds a complete page to the bitstream. 

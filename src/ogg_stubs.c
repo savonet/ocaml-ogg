@@ -315,13 +315,19 @@ CAMLprim value ocaml_ogg_stream_eos(value o_stream_state)
   CAMLreturn(Val_bool(ogg_stream_eos(os)));
 }
 
-CAMLprim value ocaml_ogg_stream_pageout(value o_stream_state)
+CAMLprim value ocaml_ogg_stream_pageout(value o_stream_state, value fill)
 {
   CAMLparam1(o_stream_state);
   ogg_stream_state *os = Stream_state_val(o_stream_state);
   ogg_page og;
+  int ret;
 
-  if(!ogg_stream_pageout(os, &og))
+  if (fill != Val_unit)
+    ret = ogg_stream_pageout_fill(os, &og, Int_val(fill));
+  else
+    ret = ogg_stream_pageout(os, &og);
+
+  if(!ret)
     caml_raise_constant(*caml_named_value("ogg_exn_not_enough_data"));
 
   CAMLreturn(value_of_page(&og));
