@@ -1,4 +1,4 @@
-0.4.5 ()
+0.4.5 (08-05-2013)
 =====
 * Added optional fill parameter to [get_page]
   to try to limit ogg logical pages size.
