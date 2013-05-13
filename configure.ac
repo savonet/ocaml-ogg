@@ -6,7 +6,8 @@ AC_MSG_RESULT([configuring $PACKAGE_STRING])
 AC_BASE_CHECKS()
 
 PKG_PROG_PKG_CONFIG()
-PKG_CONFIG_CHECK_MODULE([ogg],[1.2.1])
+PKG_CONFIG_CHECK_MODULE([ogg])
+AC_CHECK_LIB([ogg],[ogg_stream_pageout_fill],[CFLAGS="$CFLAGS -DHAVE_PAGEOUT_FILL"])
 
 # substitutions to perform
 AC_SUBST(VERSION)
