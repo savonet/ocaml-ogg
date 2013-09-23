@@ -50,7 +50,7 @@ type callbacks =
   * First element is a string describing
   * the decoder used to decode the track.
   * Second element is the serial number
-  * associated to the [Ogg.Stream.t] logical
+  * associated to the [Ogg.Stream.stream] logical
   * stream used to pull data packets for that
   * track. *)
 type track =
@@ -245,9 +245,9 @@ type ('a,'b) decoder =
     name: string;
     info : unit -> 'a*metadata;
     decode : ('b -> unit) -> unit ;
-    restart : Ogg.Stream.t -> unit;
+    restart : Ogg.Stream.stream -> unit;
     (** This function is called after seeking
-      * to notify the decoder of the new [Ogg.Stream.t]
+      * to notify the decoder of the new [Ogg.Stream.stream]
       * that is should use to pull data packets. *)
     samples_of_granulepos : Int64.t -> Int64.t
   }
@@ -260,11 +260,11 @@ type decoders =
 
 (** Type used to register a new decoder. First
   * element is a function used to check if the initial [Ogg.Stream.packet]
-  * of an [Ogg.Stream.t] matches the format decodable by this decoder.
+  * of an [Ogg.Stream.stream] matches the format decodable by this decoder.
   * Second element is a function that instanciates the actual decoder
-  * using the initial [Ogg.Stream.t] used to pull data packets for the
+  * using the initial [Ogg.Stream.stream] used to pull data packets for the
   * decoder. *)
-type register_decoder = (Ogg.Stream.packet -> bool) * (Ogg.Stream.t -> decoders)
+type register_decoder = (Ogg.Stream.packet -> bool) * (Ogg.Stream.stream -> decoders)
 
 (** {3 Functions} *)
 

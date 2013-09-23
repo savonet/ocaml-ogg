@@ -283,19 +283,6 @@ sig
 
   (** Returns a packet's granule position. *)
   val packet_granulepos : packet -> Int64.t
-
-  (** Backward compatibility *)
-
-  type t = stream
-
-  val pageout : t -> string
-
-  val pagesout : t -> string
-
-  val flush : t -> string
-
-  val pagesout_eos : t -> string
-
 end
 
 module Skeleton : 

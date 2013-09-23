@@ -40,7 +40,7 @@ type ('a,'b) decoder =
     name : string;
     info : unit -> 'a*metadata;
     decode : ('b -> unit) -> unit ;
-    restart : Ogg.Stream.t -> unit ;
+    restart : Ogg.Stream.stream -> unit ;
     samples_of_granulepos : Int64.t -> Int64.t }
 type audio_info = 
   { channels : int;
@@ -90,7 +90,7 @@ type index_element =
     total_samples : Int64.t }
 
 type stream = 
-  { mutable os : Ogg.Stream.t;
+  { mutable os : Ogg.Stream.stream;
     mutable position : float;
     index : (Int64.t,index_element) Hashtbl.t;
     mutable read_samples : Int64.t;
@@ -111,7 +111,7 @@ type track =
   Video_track of (string*nativeint)
 
 exception Internal of (Ogg.Page.t*(int option))
-exception Exit of nativeint*Ogg.Stream.t*decoders
+exception Exit of nativeint*Ogg.Stream.stream*decoders
 exception Track of (bool*nativeint*stream)
 exception Invalid_stream
 exception Not_available
@@ -123,7 +123,7 @@ exception Not_available
 exception End_of_stream
 
 type register_decoder =
-  (Ogg.Stream.packet -> bool) * (Ogg.Stream.t -> decoders)
+  (Ogg.Stream.packet -> bool) * (Ogg.Stream.stream -> decoders)
 
 let get_some x = 
   match x with

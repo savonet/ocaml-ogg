@@ -112,45 +112,6 @@ struct
   external put_page : stream -> Page.t -> unit = "ocaml_ogg_stream_pagein"
 
   external flush_page : stream -> Page.t = "ocaml_ogg_flush_stream"
-
-  (** Backward compatibility *)
-  type t = stream
-
-  let s_o_f (h,b) = h ^ b
-
-  let pageout s = s_o_f (get_page s)
-
-  let pagesout s = 
-    let rec f v = 
-      try
-        let n = pageout s in
-        f (v ^ n)
-      with
-        | Not_enough_data -> v
-    in
-    f ""
-
-  let flush s = 
-    let rec f v = 
-      try
-        let v = v ^ (s_o_f (flush_page s)) in
-        f v
-      with
-        | Not_enough_data -> v
-    in
-    f ""
-
-  let pagesout_eos s = 
-    let rec f v = 
-      let p = flush_page s in
-      let v = v ^ (s_o_f p) in
-      if Page.eos p then 
-       v
-      else
-       f v
-    in
-    f ""
-
 end
 
 module Sync =
