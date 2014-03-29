@@ -338,9 +338,9 @@ let fold_tracks dec f x =
 let get_track dec dtype =
   let test ended id stream =
     match stream.dec,dtype with
-      | Audio d,Audio_track (_,x) when x = id -> 
+      | Audio _,Audio_track (_,x) when x = id -> 
           raise (Track (ended,id,stream))
-      | Video d,Video_track (_,x) when x = id -> 
+      | Video _,Video_track (_,x) when x = id -> 
           raise (Track (ended,id,stream))
       | _ -> ()
   in
@@ -368,10 +368,10 @@ type standard_tracks =
 
 let drop_track dec dtype =
   (* Remove all track of this type *)
-  let rec get_tracks id s l =
+  let get_tracks id s l =
     match s.dec,dtype with
-      | Audio d,Audio_track (_,x) when x = id -> (id,s)::l
-      | Video d,Video_track (_,x) when x = id -> (id,s)::l
+      | Audio _,Audio_track (_,x) when x = id -> (id,s)::l
+      | Video _,Video_track (_,x) when x = id -> (id,s)::l
       | _ -> l
   in
   let tracks = fold_tracks dec get_tracks [] in
@@ -593,7 +593,7 @@ let seek ?(relative=false) dec time =
       float x /. float y
     in
     match stream.dec with
-      | Audio d -> 
+      | Audio _ -> 
             { sync_id    = id;
               sync_stream = stream;
               sync_rate  = sample_rate ();
@@ -601,7 +601,7 @@ let seek ?(relative=false) dec time =
               sync_granulepos = Int64.zero;
               sync_skip_samples = 0;
               sync_bytes = 0 } :: l
-      | Video d -> 
+      | Video _ -> 
             { sync_id    = id;
               sync_stream = stream;
               sync_rate  = sample_rate ();
