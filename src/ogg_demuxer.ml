@@ -307,7 +307,7 @@ let init ?(log=(fun _ -> ())) c =
 let unix_callbacks fd = 
   { read = 
       (fun len ->
-        let buf = String.create len in
+        let buf = Bytes.create len in
         let ret = Unix.read fd buf 0 len in
         buf,ret);
     tell = Some (fun () -> Unix.lseek fd 0 Unix.SEEK_CUR);

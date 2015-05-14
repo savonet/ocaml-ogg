@@ -131,7 +131,7 @@ struct
     let fd = Unix.openfile f [Unix.O_RDONLY] 0o400 in
     try
       create (fun n -> 
-                let s = String.create n in
+                let s = Bytes.create n in
                 let r = Unix.read fd s 0 n in
                 s,r),fd
     with
