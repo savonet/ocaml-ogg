@@ -1,4 +1,4 @@
-0.5.0 ()
+0.5.0 (03-08-2015)
 =====
 * Removed old Ogg.Stream backward compatibility functions.
 * Switch to Bytes API.
