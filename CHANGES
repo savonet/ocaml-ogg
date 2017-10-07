@@ -1,3 +1,7 @@
+0.5.2 (07-10-2017)
+=====
+* Fix compilation with OCaml 4.06
+
 0.5.1 (11-04-2017)
 =====
 * Install .cmx files

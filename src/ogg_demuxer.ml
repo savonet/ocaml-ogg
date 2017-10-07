@@ -309,7 +309,7 @@ let unix_callbacks fd =
       (fun len ->
         let buf = Bytes.create len in
         let ret = Unix.read fd buf 0 len in
-        buf,ret);
+        Bytes.to_string buf,ret);
     tell = Some (fun () -> Unix.lseek fd 0 Unix.SEEK_CUR);
     seek = Some (fun len -> Unix.lseek fd len Unix.SEEK_SET) }
 

@@ -133,7 +133,7 @@ struct
       create (fun n -> 
                 let s = Bytes.create n in
                 let r = Unix.read fd s 0 n in
-                s,r),fd
+                Bytes.to_string s,r),fd
     with
       | e -> Unix.close fd; raise e
 
