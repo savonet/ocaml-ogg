@@ -1,0 +1,28 @@
+opam-version: "2.0"
+version: "dev"
+maintainer: "Romain Beauxis <toots@rastageeks.org>"
+authors: "The Savonet Team <savonet-users@lists.sourceforge.net>"
+homepage: "https://github.com/savonet/ocaml-ogg"
+bug-reports: "https://github.com/savonet/ocaml-ogg/issues"
+depends: ["ocaml" "ocamlfind"]
+flags: light-uninstall
+build: [
+  ["./bootstrap"]
+  ["./configure" "--prefix" prefix]
+  [make clean]
+  [make]
+]
+install: [make "install"]
+remove: ["ocamlfind" "remove" "ogg"]
+depexts: [
+  ["libogg-dev"] {os-distribution = "alpine"}
+  ["libogg"] {os-distribution = "archlinux"}
+  ["libogg-dev"] {os-distribution = "debian"}
+  ["libogg-dev"] {os-distribution = "ubuntu"}
+  ["libogg-devel"] {os-distribution = "centos"}
+  ["libogg-devel"] {os-distribution = "fedora"}
+  ["libogg-devel"] {os-distribution = "opensuse"}
+  ["libogg"] {os-distribution = "nixos"}
+  ["libogg"] {os = "macos" & os-distribution = "homebrew"}
+]
+dev-repo: "git+https://github.com/savonet/ocaml-ogg.git"
