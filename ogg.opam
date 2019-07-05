@@ -8,12 +8,12 @@ bug-reports: "https://github.com/savonet/ocaml-ogg/issues"
 synopsis: "Interface for Ogg Bitstream Library, otherwise known as libogg"
 depends: [
   "ocaml"
-  "ocamlfind" {pinned}
+  "ocamlfind" {build}
 ]
 build: [
-  ["./bootstrap"] {pinned}
+  ["./bootstrap"] {dev}
   ["./configure" "--prefix" prefix]
-  [make "clean"] {pinned}
+  [make "clean"] {dev}
   [make]
 ]
 install: [make "install"]
