@@ -20,8 +20,7 @@ install: [make "install"]
 depexts: [
   ["libogg-dev"] {os-distribution = "alpine"}
   ["libogg"] {os-distribution = "arch"}
-  ["libogg-dev"] {os-distribution = "debian"}
-  ["libogg-dev"] {os-distribution = "ubuntu"}
+  ["libogg-dev"] {os-family = "debian"}
   ["libogg-devel"] {os-distribution = "centos"}
   ["libogg-devel"] {os-distribution = "fedora"}
   ["libogg-devel"] {os-family = "suse"}
