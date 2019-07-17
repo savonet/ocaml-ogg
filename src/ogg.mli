@@ -201,6 +201,9 @@ sig
     * packet data meets/exceeds the maximum page size regardless of accumulated
     * packet count.
     *
+    * The exception [Not_enough_data] is raised if not enough data is available
+    * to generate the page.
+    *
     * Call [flush_page] if immediate  page generation is desired. This 
     * may be occasionally necessary, for example, to limit the temporal 
     * latency of a variable bitrate stream.
