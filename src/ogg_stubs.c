@@ -184,23 +184,24 @@ CAMLprim value ocaml_ogg_sync_reset(value oy)
 CAMLprim value ocaml_ogg_sync_pageseek(value callback, value oy)
 {
   CAMLparam2(callback,oy);
-  CAMLlocal3(ret,s,bytes);
+  CAMLlocal1(bytes);
   ogg_sync_state *sync = Sync_state_val(oy);
+  int read;
   int len = 4096;
   ogg_page page;
   int err = ogg_sync_pageseek(sync, &page);
 
+  bytes = caml_alloc_string(len);
+
   while (err <= 0)
   {
-    ret = caml_callback(callback,Val_int(len));
-    s = Field(ret,0);
-    bytes = Field(ret,1);
-    if (Int_val(bytes) == 0)
+    read = Int_val(caml_callback3(callback,bytes,Val_int(0),Val_int(len)));
+    if (read == 0)
       caml_raise_constant(*caml_named_value("ogg_exn_eos"));
     
-    char *buffer = ogg_sync_buffer(sync,Int_val(bytes));
-    memcpy(buffer,String_val(s),Int_val(bytes));
-    ogg_sync_wrote(sync,Int_val(bytes));
+    char *buffer = ogg_sync_buffer(sync,read);
+    memcpy(buffer,String_val(bytes),read);
+    ogg_sync_wrote(sync,read);
     err = ogg_sync_pageseek(sync, &page);
   }
 
@@ -210,25 +211,26 @@ CAMLprim value ocaml_ogg_sync_pageseek(value callback, value oy)
 CAMLprim value ocaml_ogg_sync_read(value callback, value oy)
 {
   CAMLparam2(callback,oy);
-  CAMLlocal3(ret,s,bytes);
+  CAMLlocal2(ret,bytes);
   ogg_sync_state *sync = Sync_state_val(oy);
+  int read;
   int len = 4096;
   ogg_page page;
   int ans = ogg_sync_pageout(sync, &page);
+
+  bytes = caml_alloc_string(len);
 
   while (ans != 1)
   {
     if (ans == -1)
       caml_raise_constant(*caml_named_value("ogg_exn_out_of_sync"));
-    ret = caml_callback(callback,Val_int(len));
-    s = Field(ret,0);
-    bytes = Field(ret,1);
-    if (Int_val(bytes) == 0)
+    read = Int_val(caml_callback3(callback,bytes,Val_int(0),Val_int(len)));
+    if (read == 0)
       caml_raise_constant(*caml_named_value("ogg_exn_eos"));
 
-    char *buffer = ogg_sync_buffer(sync,Int_val(bytes));
-    memcpy(buffer,String_val(s),Int_val(bytes));
-    ogg_sync_wrote(sync,Int_val(bytes));
+    char *buffer = ogg_sync_buffer(sync,read);
+    memcpy(buffer,String_val(bytes),read);
+    ogg_sync_wrote(sync,read);
     ans = ogg_sync_pageout(sync, &page);
   }
 

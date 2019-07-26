@@ -124,13 +124,15 @@ module Sync :
 sig
   type t
 
+  (** Type for read functions. *)
+  type read = bytes -> int -> int -> int
+
   (** 
     * This function is used to initialize a [Sync.t] to a known initial value 
     * in preparation for manipulation of an Ogg bitstream. 
     *
-    * The function passed is used to fill the stream with new data. It receives a number of bytes to read
-    * and returns a string read and its size. *)
-  val create : (int -> string*int) -> t
+    * The function passed is used to fill the stream with new data. *)
+  val create : read -> t
 
   (**
     * Wrapper around [create] to open a file as the ogg stream. *)
@@ -148,7 +150,7 @@ sig
     * [Sync.t] to initial values. 
     *
     * [read_func] is optional and is a new function to read new data. *)
-  val reset : ?read_func:(int -> string*int) -> t -> unit
+  val reset : ?read_func:read -> t -> unit
 
   (** 
     * This function synchronizes the ogg_sync_state struct to the next ogg_page.
