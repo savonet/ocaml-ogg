@@ -76,7 +76,7 @@ type audio_info =
   }
 
 (** Type for audio data. *)
-type audio_data = (float array array)
+type audio_data = (float, Bigarray.float32_elt, Bigarray.c_layout) Bigarray.Array1.t array
 
 (** Type of a video plane. *)
 type video_plane = (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t

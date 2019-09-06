@@ -1,3 +1,7 @@
+0.6.0 (unreleased)
+=====
+* Use bigarray for audio data.
+
 0.5.2 (07-10-2017)
 =====
 * Fix compilation with OCaml 4.06
