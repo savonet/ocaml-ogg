@@ -1,5 +1,6 @@
 0.6.0 (unreleased)
 =====
+* Use bigarray for audio data.
 * Switch to read callbacks with bytes in Ogg.Sync.
 
 0.5.2 (07-10-2017)

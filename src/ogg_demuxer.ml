@@ -45,7 +45,7 @@ type ('a,'b) decoder =
 type audio_info = 
   { channels : int;
     sample_rate : int } 
-type audio_data = (float array array)
+type audio_data = (float, Bigarray.float32_elt, Bigarray.c_layout) Bigarray.Array1.t array
 type video_plane =
   (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
@@ -697,7 +697,7 @@ let decode_audio dec dtype f =
   try
     let f x = 
       begin try
-        incr_pos dec stream (Array.length x.(0));
+        incr_pos dec stream (Bigarray.Array1.dim x.(0));
       with _ -> () end;
       f x
     in
