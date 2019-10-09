@@ -119,8 +119,10 @@ struct
   (** Internal type for sync state *)
   type sync
 
+  type read = bytes -> int -> int -> int
+
   (** External type for sync state. References the C sync structure, and the read function *)
-  type t = ((int -> string*int)*sync) ref
+  type t = (read*sync) ref
 
   external create : unit -> sync = "ocaml_ogg_sync_init"
 
@@ -129,15 +131,9 @@ struct
 
   let create_from_file f = 
     let fd = Unix.openfile f [Unix.O_RDONLY] 0o400 in
-    try
-      create (fun n -> 
-                let s = Bytes.create n in
-                let r = Unix.read fd s 0 n in
-                Bytes.to_string s,r),fd
-    with
-      | e -> Unix.close fd; raise e
+    create (Unix.read fd), fd
 
-  external read : (int -> string*int) -> sync -> Page.t = "ocaml_ogg_sync_read"
+  external read : read -> sync -> Page.t = "ocaml_ogg_sync_read"
 
   let read s = 
     let (f,s) = !s in
@@ -152,7 +148,7 @@ struct
       | None -> x := (f,s)
       | Some v -> x := (v,s)
 
-  external seek : (int -> string*int) -> sync -> Page.t = "ocaml_ogg_sync_pageseek"
+  external seek : read -> sync -> Page.t = "ocaml_ogg_sync_pageseek"
 
   let seek x = 
     let (f,s) = !x in

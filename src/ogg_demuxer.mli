@@ -41,7 +41,7 @@ type t
 (** Type for callbacks used to acess encoded data. *)
 type callbacks =
   { 
-    read   : int -> string*int;
+    read   : bytes -> int -> int -> int;
     seek   : (int -> int) option;
     tell   : (unit -> int) option
   }
