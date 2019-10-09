@@ -80,7 +80,7 @@ type decoders =
     | Unknown
 
 type callbacks =
-  { read   : int -> string*int;
+  { read   : bytes -> int -> int -> int;
     seek   : (int -> int) option;
     tell   : (unit -> int) option }
 
@@ -305,11 +305,7 @@ let init ?(log=(fun _ -> ())) c =
           finished_streams = finished_streams }
 
 let unix_callbacks fd = 
-  { read = 
-      (fun len ->
-        let buf = Bytes.create len in
-        let ret = Unix.read fd buf 0 len in
-        Bytes.to_string buf,ret);
+  { read = Unix.read fd;
     tell = Some (fun () -> Unix.lseek fd 0 Unix.SEEK_CUR);
     seek = Some (fun len -> Unix.lseek fd len Unix.SEEK_SET) }
 
