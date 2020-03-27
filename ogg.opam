@@ -17,6 +17,9 @@ build: [
   [make]
 ]
 install: [make "install"]
+conflicts: [
+  "liquidsoap" {<= "1.4.0"}
+]
 depexts: [
   ["libogg-dev"] {os-distribution = "alpine"}
   ["libogg"] {os-distribution = "arch"}
