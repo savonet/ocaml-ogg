@@ -53,10 +53,9 @@ exception Internal_error
   * joined across page boundaries allowing packets of arbitrary size. In practice
   * pages are usually around 4 kB.
   *)
-module Page :
-sig
+module Page : sig
   (** A page is a header and a body *)
-  type t = string*string
+  type t = string * string
 
   (** 
     * Returns the unique serial number for the logical bitstream of this page. 
@@ -117,11 +116,9 @@ sig
   (**
     * Checksums an ogg_page. *)
   val set_checksum : t -> unit
-
 end
 
-module Sync :
-sig
+module Sync : sig
   type t
 
   (** Type for read functions. *)
@@ -136,7 +133,7 @@ sig
 
   (**
     * Wrapper around [create] to open a file as the ogg stream. *)
-  val create_from_file : string -> (t*Unix.file_descr)
+  val create_from_file : string -> t * Unix.file_descr
 
   (** 
     * Read a page from [Sync.t] 
@@ -161,9 +158,7 @@ sig
   val seek : t -> Page.t
 end
 
-
-module Stream :
-sig
+module Stream : sig
   (**
     * The [stream] values track the current encode/decode state of the
     * current logical bitstream.
@@ -290,9 +285,7 @@ sig
   val packet_granulepos : packet -> Int64.t
 end
 
-module Skeleton : 
-sig
-
+module Skeleton : sig
   (**
     * Create an initial ogg skeleton packet ('fishead'),
     * to complete with data packet from the various codecs
@@ -302,10 +295,12 @@ sig
     ?presentation_numerator:Int64.t ->
     ?presentation_denominator:Int64.t ->
     ?basetime_numerator:Int64.t ->
-    ?basetime_denominator:Int64.t -> ?utc:Int32.t -> unit -> Stream.packet
+    ?basetime_denominator:Int64.t ->
+    ?utc:Int32.t ->
+    unit ->
+    Stream.packet
 
- (** Create an end-of-stream packet for
+  (** Create an end-of-stream packet for
    * an ogg skeleton logical stream *)
- val eos : unit -> Stream.packet
-
+  val eos : unit -> Stream.packet
 end

@@ -44,131 +44,108 @@ exception End_of_stream
 exception Internal_error
 
 let () =
-  Callback.register_exception "ogg_exn_not_enough_data" Not_enough_data ;
-  Callback.register_exception "ogg_exn_bad_data" Bad_data ;
-  Callback.register_exception "ogg_exn_out_of_sync" Out_of_sync ;
-  Callback.register_exception "ogg_exn_eos" End_of_stream ;
+  Callback.register_exception "ogg_exn_not_enough_data" Not_enough_data;
+  Callback.register_exception "ogg_exn_bad_data" Bad_data;
+  Callback.register_exception "ogg_exn_out_of_sync" Out_of_sync;
+  Callback.register_exception "ogg_exn_eos" End_of_stream;
   Callback.register_exception "ogg_exn_internal_error" Internal_error
 
-module Page = 
-struct
-  type t = string*string
+module Page = struct
+  type t = string * string
 
   external serialno : t -> nativeint = "ocaml_ogg_page_serialno"
-
   external eos : t -> bool = "ocaml_ogg_page_eos"
-
   external bos : t -> bool = "ocaml_ogg_page_bos"
-
   external packets : t -> int = "ocaml_ogg_page_packets"
-
   external continued : t -> bool = "ocaml_ogg_page_continued"
-
   external version : t -> int = "ocaml_ogg_page_version"
-
   external granulepos : t -> Int64.t = "ocaml_ogg_page_granulepos"
-
   external pageno : t -> nativeint = "ocaml_ogg_page_pageno"
-
   external set_checksum : t -> unit = "ocaml_ogg_page_checksum_set"
-
 end
 
-module Stream =
-struct
+module Stream = struct
   type stream
-
   type packet
 
-  external packet_granulepos : packet -> Int64.t = "ocaml_ogg_stream_packet_granulepos"
+  external packet_granulepos : packet -> Int64.t
+    = "ocaml_ogg_stream_packet_granulepos"
 
   external create : nativeint -> stream = "ocaml_ogg_stream_init"
 
-  let create ?(serial = Random.nativeint (Nativeint.of_int 0x3FFFFFFF)) () = create serial
+  let create ?(serial = Random.nativeint (Nativeint.of_int 0x3FFFFFFF)) () =
+    create serial
 
   external serialno : stream -> nativeint = "ocaml_ogg_stream_serialno"
-
   external eos : stream -> bool = "ocaml_ogg_stream_eos"
-
   external get_page : stream -> unit -> Page.t = "ocaml_ogg_stream_pageout"
-
   external get_page_fill : stream -> int -> Page.t = "ocaml_ogg_stream_pageout"
 
   let get_page ?fill os =
     match fill with
       | Some bytes -> get_page_fill os bytes
-      | None       -> get_page os ()
+      | None -> get_page os ()
 
   external get_packet : stream -> packet = "ocaml_ogg_stream_packetout"
-
   external peek_packet : stream -> packet = "ocaml_ogg_stream_packetpeek"
 
-  external peek_granulepos : stream -> Int64.t = "ocaml_ogg_stream_granulepospeek"
+  external peek_granulepos : stream -> Int64.t
+    = "ocaml_ogg_stream_granulepospeek"
 
   external skip_packet : stream -> unit = "ocaml_ogg_stream_packet_advance"
-
   external put_packet : stream -> packet -> unit = "ocaml_ogg_stream_packetin"
-
   external put_page : stream -> Page.t -> unit = "ocaml_ogg_stream_pagein"
-
   external flush_page : stream -> Page.t = "ocaml_ogg_flush_stream"
 end
 
-module Sync =
-struct
+module Sync = struct
   (** Internal type for sync state *)
   type sync
 
   type read = bytes -> int -> int -> int
 
   (** External type for sync state. References the C sync structure, and the read function *)
-  type t = (read*sync) ref
+  type t = (read * sync) ref
 
   external create : unit -> sync = "ocaml_ogg_sync_init"
 
-  let create f = 
-    ref (f,create ())
+  let create f = ref (f, create ())
 
-  let create_from_file f = 
+  let create_from_file f =
     let fd = Unix.openfile f [Unix.O_RDONLY] 0o400 in
-    create (Unix.read fd), fd
+    (create (Unix.read fd), fd)
 
   external read : read -> sync -> Page.t = "ocaml_ogg_sync_read"
 
-  let read s = 
-    let (f,s) = !s in
+  let read s =
+    let f, s = !s in
     read f s
 
   external reset : sync -> unit = "ocaml_ogg_sync_reset"
 
-  let reset ?read_func x = 
-    let (f,s) = !x in
+  let reset ?read_func x =
+    let f, s = !x in
     reset s;
-    match read_func with
-      | None -> x := (f,s)
-      | Some v -> x := (v,s)
+    match read_func with None -> x := (f, s) | Some v -> x := (v, s)
 
   external seek : read -> sync -> Page.t = "ocaml_ogg_sync_pageseek"
 
-  let seek x = 
-    let (f,s) = !x in
+  let seek x =
+    let f, s = !x in
     seek f s
 end
 
+module Skeleton = struct
+  external fishead :
+    Int64.t -> Int64.t -> Int64.t -> Int64.t -> Int32.t -> Stream.packet
+    = "ocaml_ogg_skeleton_fishead"
 
-module Skeleton = 
-struct
-
-  external fishead : Int64.t -> Int64.t -> Int64.t -> Int64.t -> Int32.t -> Stream.packet = "ocaml_ogg_skeleton_fishead"
-
-  let fishead ?(presentation_numerator=Int64.zero) 
-              ?(presentation_denominator=Int64.of_int 1000)
-              ?(basetime_numerator=Int64.zero) 
-              ?(basetime_denominator=Int64.of_int 1000) 
-              ?(utc=Int32.zero) () =
-    fishead presentation_numerator presentation_denominator
-            basetime_numerator basetime_denominator utc
+  let fishead ?(presentation_numerator = Int64.zero)
+      ?(presentation_denominator = Int64.of_int 1000)
+      ?(basetime_numerator = Int64.zero)
+      ?(basetime_denominator = Int64.of_int 1000) ?(utc = Int32.zero) () =
+    fishead presentation_numerator presentation_denominator basetime_numerator
+      basetime_denominator utc
 
   external eos : unit -> Stream.packet = "ocaml_ogg_skeleton_eos"
-
 end

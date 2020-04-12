@@ -20,9 +20,9 @@
 
  *****************************************************************************)
 
- (** Ogg stream demuxer *)
+(** Ogg stream demuxer *)
 
- (** This module provides a functional abstract API to 
+(** This module provides a functional abstract API to 
    * decode and seek in Ogg streams.
    *
    * Decoders are also provided in ocaml-vorbis,
@@ -39,12 +39,11 @@
 type t
 
 (** Type for callbacks used to acess encoded data. *)
-type callbacks =
-  { 
-    read   : bytes -> int -> int -> int;
-    seek   : (int -> int) option;
-    tell   : (unit -> int) option
-  }
+type callbacks = {
+  read : bytes -> int -> int -> int;
+  seek : (int -> int) option;
+  tell : (unit -> int) option;
+}
 
 (** Type for a decodable track. 
   * First element is a string describing
@@ -54,62 +53,60 @@ type callbacks =
   * stream used to pull data packets for that
   * track. *)
 type track =
-  Audio_track of (string*nativeint) |
-  Video_track of (string*nativeint)
+  | Audio_track of (string * nativeint)
+  | Video_track of (string * nativeint)
 
 (** Type for standard tracks (see [get_standard_tracks] below). *)
-type standard_tracks =
-  { mutable audio_track : track option;
-    mutable video_track : track option }
+type standard_tracks = {
+  mutable audio_track : track option;
+  mutable video_track : track option;
+}
 
 (** Type for metadata. First element
   * is a string describing the vendor, second
   * element is a list of metadata of the form:
   * [(label,value)]. *)
-type metadata = string*((string*string) list)
+type metadata = string * (string * string) list
 
 (** Type for audio information. *)
-type audio_info =
-  { 
-    channels : int;
-    sample_rate : int
-  }
+type audio_info = { channels : int; sample_rate : int }
 
 (** Type for audio data. *)
-type audio_data = (float array array)
+type audio_data = float array array
 
 (** Type of a video plane. *)
-type video_plane = (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+type video_plane =
+  (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
 (** Supported video formats. *)
 type video_format =
-   | Yuvj_420   (* Planar YCbCr 4:2:0. Each component is an uint8_t,
-                 * luma and chroma values are full range (0x00 .. 0xff) *)
-   | Yuvj_422   (* Planar YCbCr 4:2:2. Each component is an uint8_t,
-                 * luma and chroma values are full range (0x00 .. 0xff) *)
-   | Yuvj_444   (* Planar YCbCr 4:4:4. Each component is an uint8_t,
-                 * luma and chroma values are full range (0x00 .. 0xff) *)
-(** Type for video information. *)
-type video_info =
- {
-    fps_numerator   : int;
-    fps_denominator : int;
-    width           : int; (** Width of the Y' luminance plane *)
-    height          : int; (** Height of the luminance plane *) 
- }
+  | Yuvj_420 (* Planar YCbCr 4:2:0. Each component is an uint8_t,
+              * luma and chroma values are full range (0x00 .. 0xff) *)
+  | Yuvj_422 (* Planar YCbCr 4:2:2. Each component is an uint8_t,
+              * luma and chroma values are full range (0x00 .. 0xff) *)
+  | Yuvj_444  (** Type for video information. *)
+
+(* Planar YCbCr 4:4:4. Each component is an uint8_t,
+ * luma and chroma values are full range (0x00 .. 0xff) *)
+
+type video_info = {
+  fps_numerator : int;
+  fps_denominator : int;
+  width : int;  (** Width of the Y' luminance plane *)
+  height : int;  (** Height of the luminance plane *)
+}
 
 (** Type for video data. *)
-type video_data =
- {
-    format    : video_format;
-    frame_width  : int;
-    frame_height : int;
-    y_stride  : int; (** Length, in bytes, per line *)
-    uv_stride : int; (** Length, in bytes, per line *)
-    y : video_plane; (** luminance data *)
-    u : video_plane; (** Cb data *)
-    v : video_plane; (** Cr data *)
- }
+type video_data = {
+  format : video_format;
+  frame_width : int;
+  frame_height : int;
+  y_stride : int;  (** Length, in bytes, per line *)
+  uv_stride : int;  (** Length, in bytes, per line *)
+  y : video_plane;  (** luminance data *)
+  u : video_plane;  (** Cb data *)
+  v : video_plane;  (** Cr data *)
+}
 
 (** {3 Exceptions } *)
 
@@ -128,13 +125,13 @@ exception End_of_stream
   * [log] is an optional functioned used to 
   * return logged messages during the deocding
   * process. *)
-val init : ?log:(string->unit) -> callbacks -> t 
+val init : ?log:(string -> unit) -> callbacks -> t
 
 (** Initiate a decoder from a given file name. *)
-val init_from_file : ?log:(string->unit) -> string -> t*Unix.file_descr
+val init_from_file : ?log:(string -> unit) -> string -> t * Unix.file_descr
 
 (** Initate a decoder from a given [Unix.file_descriptor] *)
-val init_from_fd : ?log:(string->unit) -> Unix.file_descr -> t
+val init_from_fd : ?log:(string -> unit) -> Unix.file_descr -> t
 
 (** Get the Ogg.Sync handler associated to 
   * the decoder. Use only if know what you are doing. *)
@@ -188,7 +185,7 @@ val video_info : t -> track -> video_info * metadata
 
 (** Get the sample_rate of the track
   * of that type. Returns a pair [(numerator,denominator)]. *)
-val sample_rate : t -> track -> (int*int)
+val sample_rate : t -> track -> int * int
 
 (** Get track absolute position. *)
 val get_track_position : t -> track -> float
@@ -233,30 +230,29 @@ val decode_audio : t -> track -> (audio_data -> unit) -> unit
   * Raises [End_of_stream] if all streams have ended.
   * In this case, you can try [reset] to see if there is a
   * new sequentialized stream. *)
-val decode_video : t -> track -> (video_data -> unit) -> unit 
+val decode_video : t -> track -> (video_data -> unit) -> unit
 
 (** {2 Implementing decoders} *)
 
 (** {3 Types } *)
 
 (** Generic type for a decoder. *)
-type ('a,'b) decoder =
-  {
-    name: string;
-    info : unit -> 'a*metadata;
-    decode : ('b -> unit) -> unit ;
-    restart : Ogg.Stream.stream -> unit;
-    (** This function is called after seeking
+type ('a, 'b) decoder = {
+  name : string;
+  info : unit -> 'a * metadata;
+  decode : ('b -> unit) -> unit;
+  restart : Ogg.Stream.stream -> unit;
+      (** This function is called after seeking
       * to notify the decoder of the new [Ogg.Stream.stream]
       * that is should use to pull data packets. *)
-    samples_of_granulepos : Int64.t -> Int64.t
-  }
+  samples_of_granulepos : Int64.t -> Int64.t;
+}
 
 (** Type for a generic logical stream decoder. *)
 type decoders =
-    | Video of (video_info,video_data) decoder
-    | Audio of (audio_info,audio_data) decoder
-    | Unknown
+  | Video of (video_info, video_data) decoder
+  | Audio of (audio_info, audio_data) decoder
+  | Unknown
 
 (** Type used to register a new decoder. First
   * element is a function used to check if the initial [Ogg.Stream.packet]
@@ -264,9 +260,10 @@ type decoders =
   * Second element is a function that instanciates the actual decoder
   * using the initial [Ogg.Stream.stream] used to pull data packets for the
   * decoder. *)
-type register_decoder = (Ogg.Stream.packet -> bool) * (Ogg.Stream.stream -> decoders)
+type register_decoder =
+  (Ogg.Stream.packet -> bool) * (Ogg.Stream.stream -> decoders)
 
 (** {3 Functions} *)
 
 (** Register a new decoder. *)
-val ogg_decoders : (string,register_decoder) Hashtbl.t
+val ogg_decoders : (string, register_decoder) Hashtbl.t
