@@ -31,6 +31,7 @@
  *
  */
 
+#include <ogg/ogg.h>
 
 #define Sync_state_val(v) (*((ogg_sync_state**)Data_custom_val(v)))
 #define Stream_state_val(v) (*((ogg_stream_state**)Data_custom_val(v)))
