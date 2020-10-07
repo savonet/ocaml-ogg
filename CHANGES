@@ -1,4 +1,4 @@
-0.6.0 (unreleased)
+0.6.0 (07-10-2020)
 =====
 * Switch to read callbacks with bytes in Ogg.Sync.
 
