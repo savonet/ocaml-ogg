@@ -80,20 +80,24 @@ type video_plane =
 
 (** Supported video formats. *)
 type video_format =
-  | Yuvj_420 (* Planar YCbCr 4:2:0. Each component is an uint8_t,
+  (* Planar YCbCr 4:2:0. Each component is an uint8_t,
               * luma and chroma values are full range (0x00 .. 0xff) *)
-  | Yuvj_422 (* Planar YCbCr 4:2:2. Each component is an uint8_t,
+  | Yuvj_420
+  (* Planar YCbCr 4:2:2. Each component is an uint8_t,
               * luma and chroma values are full range (0x00 .. 0xff) *)
-  | Yuvj_444  (** Type for video information. *)
+  | Yuvj_422
+  (* Planar YCbCr 4:4:4. Each component is an uint8_t,
+   * luma and chroma values are full range (0x00 .. 0xff) *)
+  | Yuvj_444
 
-(* Planar YCbCr 4:4:4. Each component is an uint8_t,
- * luma and chroma values are full range (0x00 .. 0xff) *)
-
+(* Type for video information. *)
 type video_info = {
   fps_numerator : int;
   fps_denominator : int;
-  width : int;  (** Width of the Y' luminance plane *)
-  height : int;  (** Height of the luminance plane *)
+  (* Width of the Y' luminance plane *)
+  width : int;
+  (* Height of the luminance plane *)
+  height : int;
 }
 
 (** Type for video data. *)
@@ -242,9 +246,9 @@ type ('a, 'b) decoder = {
   info : unit -> 'a * metadata;
   decode : ('b -> unit) -> unit;
   restart : Ogg.Stream.stream -> unit;
-      (** This function is called after seeking
-      * to notify the decoder of the new [Ogg.Stream.stream]
-      * that is should use to pull data packets. *)
+  (* This function is called after seeking
+   * to notify the decoder of the new [Ogg.Stream.stream]
+   * that is should use to pull data packets. *)
   samples_of_granulepos : Int64.t -> Int64.t;
 }
 
