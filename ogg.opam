@@ -9,6 +9,8 @@ synopsis: "Bindings to libogg"
 depends: [
   "ocaml"
   "ocamlfind" {build}
+  "conf-pkg-config"
+  "conf-libogg"
 ]
 build: [
   ["./bootstrap"] {dev}
@@ -17,14 +19,4 @@ build: [
   [make]
 ]
 install: [make "install"]
-depexts: [
-  ["libogg-dev"] {os-distribution = "alpine"}
-  ["libogg"] {os-distribution = "arch"}
-  ["libogg-dev"] {os-family = "debian"}
-  ["libogg-devel"] {os-distribution = "centos"}
-  ["libogg-devel"] {os-distribution = "fedora"}
-  ["libogg-devel"] {os-family = "suse"}
-  ["libogg"] {os-distribution = "nixos"}
-  ["libogg"] {os = "macos" & os-distribution = "homebrew"}
-]
 dev-repo: "git+https://github.com/savonet/ocaml-ogg.git"
