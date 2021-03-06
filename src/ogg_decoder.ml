@@ -158,7 +158,7 @@ let test dec page =
         log dec "Trying ogg/%s format" format;
         if check packet then (
           log dec "ogg/%s format detected for stream %nx" format serial;
-          raise (Exit (serial, os, decode os)) )
+          raise (Exit (serial, os, decode os)))
         else ())
       ogg_decoders;
     log dec "Couldn't find a decoder for ogg logical stream with serial %nx"

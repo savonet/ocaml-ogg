@@ -1,25 +1,24 @@
 ocaml-ogg
+=========
 
-
-This package contains an O'Caml interface for 
-Ogg Bitstream Library, 
-otherwise known as libogg.
+This package contains an OCaml interface for the `ogg` library
 
 Please read the COPYING file before using this software.
 
 Prerequisites:
 ==============
 
-- ocaml >= 3.0.6 (haven't tried earlier versions)
-
-- libogg >= 1.1.3 (haven't tried earlier versions)
-
-- findlib >= 0.8.1 (haven't tried earlier versions)
+- ocaml
+- libogg
+- findlib
+- dune >= 2.0
 
 Compilation:
 ============
 
-	$ make all
+```
+$ dune build
+```
 
 This should build both the native and the byte-code version of the
 extension library.
@@ -27,13 +26,17 @@ extension library.
 Installation:
 =============
 
-	$ make install
+Via `opam`:
+
+```
+$ opam install samplerate
+```
+
+Via `dune` (for developers):
+```
+$ dune install
+```
 
 This should install the library file (using ocamlfind) in the
 appropriate place.
 
-Author:
-=======
-
-This author of this software may be contacted by electronic mail
-at the following address: savonet-users@lists.sourceforge.net.

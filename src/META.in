@@ -1,6 +1,0 @@
-name="ogg"
-version="@VERSION@"
-description="OCaml bindings for libogg"
-requires=""
-archive(byte)="ogg.cma"
-archive(native)="ogg.cmxa"
