@@ -29,7 +29,7 @@ Installation:
 Via `opam`:
 
 ```
-$ opam install samplerate
+$ opam install ogg
 ```
 
 Via `dune` (for developers):
