@@ -2,7 +2,7 @@
 (version 0.7.0)
 (name ogg)
 (source (github savonet/ocaml-ogg))
-(license GPL-2)
+(license GPL-2.0)
 (authors "The Savonet Team <savonet-users@lists.sourceforge.net>")
 (maintainers "The Savonet Team <savonet-users@lists.sourceforge.net>")
 
