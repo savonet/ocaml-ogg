@@ -1,3 +1,7 @@
+0.7.1 (unreleased)
+=====
+* Added decoder API for audio big array.
+
 0.7.0 (06-03-2021)
 =====
 * Switch to `dune`

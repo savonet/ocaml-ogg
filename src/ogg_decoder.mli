@@ -74,6 +74,9 @@ type audio_info = { channels : int; sample_rate : int }
 (** Type for audio data. *)
 type audio_data = float array array
 
+type audio_data_ba =
+  (float, Bigarray.float32_elt, Bigarray.c_layout) Bigarray.Array1.t array
+
 (** Type of a video plane. *)
 type video_plane =
   (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
@@ -228,6 +231,14 @@ val seek : ?relative:bool -> t -> float -> float
   * new sequentialized stream. *)
 val decode_audio : t -> track -> (audio_data -> unit) -> unit
 
+(** Decode audio data, if possible.
+  * Decoded data is passed to the second argument.
+  *
+  * Raises [End_of_stream] if all stream have ended.
+  * In this case, you can try [reset] to see if there is a
+  * new sequentialized stream. *)
+val decode_audio_ba : t -> track -> (audio_data_ba -> unit) -> unit
+
 (** Decode video data, if possible. 
   * Decoded data is passed to the second argument. 
   *
@@ -256,7 +267,9 @@ type ('a, 'b) decoder = {
 type decoders =
   | Video of (video_info, video_data) decoder
   | Audio of (audio_info, audio_data) decoder
+  | Audio_ba of (audio_info, audio_data_ba) decoder
   | Unknown
+(* Deprecated! *)
 
 (** Type used to register a new decoder. First
   * element is a function used to check if the initial [Ogg.Stream.packet]
