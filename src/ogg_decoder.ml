@@ -712,4 +712,5 @@ let decode_rec g dec dtype f =
   exec ()
 
 let decode_audio = decode_rec decode_audio
+let decode_audio_ba = decode_rec decode_audio_ba
 let decode_video = decode_rec decode_video
