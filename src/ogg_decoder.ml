@@ -47,7 +47,7 @@ type ('a, 'b) decoder = {
 type audio_info = { channels : int; sample_rate : int }
 type audio_data = float array array
 
-type audio_data_ba =
+type audio_ba_data =
   (float, Bigarray.float32_elt, Bigarray.c_layout) Bigarray.Array1.t array
 
 type video_plane =
@@ -85,7 +85,9 @@ type video_data = {
 type decoders =
   | Video of (video_info, video_data) decoder
   | Audio of (audio_info, audio_data) decoder
-  | Audio_ba of (audio_info, audio_data_ba) decoder
+  | Audio_ba of (audio_info, audio_ba_data) decoder
+  | Audio_both of
+      (audio_info, audio_data) decoder * (audio_info, audio_ba_data) decoder
   | Unknown
 
 type callbacks = {
@@ -105,7 +107,7 @@ type stream = {
   mutable position : float;
   index : (Int64.t, index_element) Hashtbl.t;
   mutable read_samples : Int64.t;
-  dec : decoders list;
+  dec : decoders;
 }
 
 type t = {
@@ -123,6 +125,7 @@ type track =
   | Video_track of (string * nativeint)
 
 exception Internal of (Ogg.Page.t * int option)
+exception Exit of nativeint * Ogg.Stream.stream * decoders
 exception Track of (bool * nativeint * stream)
 exception Invalid_stream
 exception Not_available
@@ -155,28 +158,29 @@ let test dec page =
   Ogg.Stream.put_page os page;
   (* Get first packet *)
   let packet = Ogg.Stream.peek_packet os in
-  let decoders =
-    Hashtbl.fold
-      (fun format (check, decode) decoders ->
+  try
+    Hashtbl.iter
+      (fun format (check, decode) ->
         log dec "Trying ogg/%s format" format;
         if check packet then (
           log dec "ogg/%s format detected for stream %nx" format serial;
-          decode os :: decoders)
-        else [])
-      ogg_decoders []
-  in
-  if decoders = [] then
+          raise (Exit (serial, os, decode os)))
+        else ())
+      ogg_decoders;
     log dec "Couldn't find a decoder for ogg logical stream with serial %nx"
       serial;
-  (serial, os, decoders)
+    raise (Exit (serial, os, Unknown))
+  with Exit (s, o, d) -> (s, o, d)
 
 let granuleconv dec granulepos cur =
   try
     let ret =
       match dec with
+        | Audio_ba d -> d.samples_of_granulepos granulepos
+        | Audio_both (d, _) -> d.samples_of_granulepos granulepos
         | Audio d -> d.samples_of_granulepos granulepos
         | Video d -> d.samples_of_granulepos granulepos
-        | _ -> assert false
+        | Unknown -> assert false
     in
     if ret > Int64.zero then ret else cur
   with _ -> cur
@@ -185,11 +189,11 @@ let feed_page ~position decoder page =
   let serial = Ogg.Page.serialno page in
   try
     let stream = Hashtbl.find decoder.streams serial in
-    if stream.dec <> [] then begin
+    if stream.dec <> Unknown then begin
       Ogg.Stream.put_page stream.os page;
       let granulepos = Ogg.Page.granulepos page in
       let total_samples =
-        granuleconv (List.hd stream.dec) granulepos stream.read_samples
+        granuleconv stream.dec granulepos stream.read_samples
       in
       if total_samples > stream.read_samples then begin
         begin
@@ -210,7 +214,7 @@ let feed_page ~position decoder page =
     if Ogg.Page.eos page then begin
       log decoder "Reached last page of logical stream %nx" serial;
       Hashtbl.remove decoder.streams serial;
-      if stream.dec <> [] then
+      if stream.dec <> Unknown then
         (* Moving finished stream to decoder.finished_streams *)
         Hashtbl.add decoder.finished_streams serial stream
     end
@@ -326,11 +330,13 @@ let fold_tracks dec f x =
 let get_track dec dtype =
   let test ended id stream =
     match (stream.dec, dtype) with
-      | Audio_ba _ :: _, Audio_track (_, x) when x = id ->
+      | Audio_ba _, Audio_track (_, x) when x = id ->
           raise (Track (ended, id, stream))
-      | Audio _ :: _, Audio_track (_, x) when x = id ->
+      | Audio_both _, Audio_track (_, x) when x = id ->
           raise (Track (ended, id, stream))
-      | Video _ :: _, Video_track (_, x) when x = id ->
+      | Audio _, Audio_track (_, x) when x = id ->
+          raise (Track (ended, id, stream))
+      | Video _, Video_track (_, x) when x = id ->
           raise (Track (ended, id, stream))
       | _ -> ()
   in
@@ -345,10 +351,11 @@ let get_track dec dtype =
 let get_tracks dec =
   let f id stream l =
     match stream.dec with
-      | Audio_ba d :: _ -> Audio_track (d.name, id) :: l
-      | Audio d :: _ -> Audio_track (d.name, id) :: l
-      | Video d :: _ -> Video_track (d.name, id) :: l
-      | Unknown :: _ | [] -> l
+      | Audio_ba d -> Audio_track (d.name, id) :: l
+      | Audio_both (d, _) -> Audio_track (d.name, id) :: l
+      | Audio d -> Audio_track (d.name, id) :: l
+      | Video d -> Video_track (d.name, id) :: l
+      | Unknown -> l
   in
   fold_tracks dec f []
 
@@ -361,9 +368,10 @@ let drop_track dec dtype =
   (* Remove all track of this type *)
   let get_tracks id s l =
     match (s.dec, dtype) with
-      | Audio_ba _ :: _, Audio_track (_, x) when x = id -> (id, s) :: l
-      | Audio _ :: _, Audio_track (_, x) when x = id -> (id, s) :: l
-      | Video _ :: _, Video_track (_, x) when x = id -> (id, s) :: l
+      | Audio_ba _, Audio_track (_, x) when x = id -> (id, s) :: l
+      | Audio_both _, Audio_track (_, x) when x = id -> (id, s) :: l
+      | Audio _, Audio_track (_, x) when x = id -> (id, s) :: l
+      | Video _, Video_track (_, x) when x = id -> (id, s) :: l
       | _ -> l
   in
   let tracks = fold_tracks dec get_tracks [] in
@@ -378,7 +386,7 @@ let drop_track dec dtype =
         index = x.index;
         read_samples = x.read_samples;
         position = x.position;
-        dec = [];
+        dec = Unknown;
       }
   in
   List.iter f tracks
@@ -386,13 +394,15 @@ let drop_track dec dtype =
 let get_standard_tracks ?tracks dec =
   let f id stream (a_t, v_t, l) =
     match stream.dec with
-      | Audio_ba d :: _ when a_t = None ->
+      | Audio_ba d when a_t = None -> (Some (Audio_track (d.name, id)), v_t, l)
+      | Audio_ba d -> (a_t, v_t, Audio_track (d.name, id) :: l)
+      | Audio_both (d, _) when a_t = None ->
           (Some (Audio_track (d.name, id)), v_t, l)
-      | Audio_ba d :: _ -> (a_t, v_t, Audio_track (d.name, id) :: l)
-      | Audio d :: _ when a_t = None -> (Some (Audio_track (d.name, id)), v_t, l)
-      | Audio d :: _ -> (a_t, v_t, Audio_track (d.name, id) :: l)
-      | Video d :: _ when v_t = None -> (a_t, Some (Video_track (d.name, id)), l)
-      | Video d :: _ -> (a_t, v_t, Video_track (d.name, id) :: l)
+      | Audio_both (d, _) -> (a_t, v_t, Audio_track (d.name, id) :: l)
+      | Audio d when a_t = None -> (Some (Audio_track (d.name, id)), v_t, l)
+      | Audio d -> (a_t, v_t, Audio_track (d.name, id) :: l)
+      | Video d when v_t = None -> (a_t, Some (Video_track (d.name, id)), l)
+      | Video d -> (a_t, v_t, Video_track (d.name, id) :: l)
       | _ -> (a_t, v_t, l)
   in
   let a_t, v_t, drop = fold_tracks dec f (None, None, []) in
@@ -410,6 +420,8 @@ let get_standard_tracks dec = get_standard_tracks dec
 let rec sample_rate_priv d dec =
   try
     match d with
+      | Audio_ba d -> ((fst (d.info ())).sample_rate, 1)
+      | Audio_both (d, _) -> ((fst (d.info ())).sample_rate, 1)
       | Audio d -> ((fst (d.info ())).sample_rate, 1)
       | Video d ->
           ((fst (d.info ())).fps_numerator, (fst (d.info ())).fps_denominator)
@@ -420,7 +432,7 @@ let rec sample_rate_priv d dec =
 
 let sample_rate dec dtype =
   let _, _, stream = get_track dec dtype in
-  sample_rate_priv (List.hd stream.dec) dec
+  sample_rate_priv stream.dec dec
 
 let get_track_position dec dtype =
   let _, _, stream = get_track dec dtype in
@@ -431,7 +443,7 @@ let get_position dec =
   then raise Not_available;
   let f _ stream pos =
     match stream.dec with
-      | Audio_ba _ :: _ | Audio _ :: _ | Video _ :: _ -> min stream.position pos
+      | Audio_ba _ | Audio_both _ | Audio _ | Video _ -> min stream.position pos
       | _ -> pos
   in
   fold_tracks dec f max_float
@@ -510,9 +522,7 @@ let sync_forward dec sync_points sync_point =
   let rec skip (cur, skipped) =
     try
       let pos = Ogg.Stream.peek_granulepos sync_point.sync_stream.os in
-      let total_samples =
-        granuleconv (List.hd sync_point.sync_stream.dec) pos cur
-      in
+      let total_samples = granuleconv sync_point.sync_stream.dec pos cur in
       let diff = Int64.to_int (Int64.sub total_samples cur) in
       if skipped + diff < sync_point.sync_skip_samples then begin
         Ogg.Stream.skip_packet sync_point.sync_stream.os;
@@ -542,11 +552,11 @@ let seek ?(relative = false) dec time =
   log dec "Seeking to absolute position at %.2f sec" time;
   let f id stream l =
     let sample_rate () =
-      let x, y = sample_rate_priv (List.hd stream.dec) dec in
+      let x, y = sample_rate_priv stream.dec dec in
       float x /. float y
     in
     match stream.dec with
-      | Audio_ba _ :: _ | Audio _ :: _ ->
+      | Audio_ba _ | Audio_both _ | Audio _ ->
           {
             sync_id = id;
             sync_stream = stream;
@@ -557,7 +567,7 @@ let seek ?(relative = false) dec time =
             sync_bytes = 0;
           }
           :: l
-      | Video _ :: _ ->
+      | Video _ ->
           {
             sync_id = id;
             sync_stream = stream;
@@ -597,9 +607,10 @@ let seek ?(relative = false) dec time =
   let resync x =
     sync_forward dec sync_points x;
     match x.sync_stream.dec with
-      | Audio_ba d :: _ -> d.restart x.sync_stream.os
-      | Audio d :: _ -> d.restart x.sync_stream.os
-      | Video d :: _ -> d.restart x.sync_stream.os
+      | Audio_ba d -> d.restart x.sync_stream.os
+      | Audio_both (d, _) -> d.restart x.sync_stream.os
+      | Audio d -> d.restart x.sync_stream.os
+      | Video d -> d.restart x.sync_stream.os
       | _ -> ()
   in
   List.iter resync sync_points;
@@ -614,7 +625,7 @@ let seek ?relative dec time =
     raise End_of_stream
 
 let incr_pos dec stream len =
-  let x, y = sample_rate_priv (List.hd stream.dec) dec in
+  let x, y = sample_rate_priv stream.dec dec in
   let rate = float x /. float y in
   stream.position <- stream.position +. (float len /. rate)
 
@@ -622,16 +633,21 @@ let rec audio_info dec dtype =
   let _, _, stream = get_track dec dtype in
   try
     match stream.dec with
-      | Audio_ba d :: _ -> d.info ()
-      | Audio d :: _ -> d.info ()
+      | Audio_ba d -> d.info ()
+      | Audio_both (d, _) -> d.info ()
+      | Audio d -> d.info ()
       | _ -> raise Not_found
   with Ogg.Not_enough_data ->
     feed dec;
     audio_info dec dtype
 
+let can_decode_ba dec dtype =
+  let _, _, stream = get_track dec dtype in
+  match stream.dec with Audio_ba _ | Audio_both _ -> true | _ -> false
+
 let rec video_info dec dtype =
   let _, _, stream = get_track dec dtype in
-  try match stream.dec with Video d :: _ -> d.info () | _ -> raise Not_found
+  try match stream.dec with Video d -> d.info () | _ -> raise Not_found
   with Ogg.Not_enough_data ->
     feed dec;
     video_info dec dtype
@@ -665,19 +681,19 @@ let decode_audio_gen ~get_decoder ~length dec dtype f =
     if eos dec then raise End_of_stream
 
 let decode_audio =
-  let rec get_decoder = function
-    | Audio d :: _ -> d
-    | _ :: l -> get_decoder l
-    | [] -> raise Not_available
+  let get_decoder = function
+    | Audio d -> d
+    | Audio_both (d, _) -> d
+    | _ -> raise Not_available
   in
   let length = Array.length in
   decode_audio_gen ~get_decoder ~length
 
 let decode_audio_ba =
-  let rec get_decoder = function
-    | Audio_ba d :: _ -> d
-    | _ :: l -> get_decoder l
-    | [] -> raise Not_available
+  let get_decoder = function
+    | Audio_ba d -> d
+    | Audio_both (_, d) -> d
+    | _ -> raise Not_available
   in
   let length = Bigarray.Array1.dim in
   decode_audio_gen ~get_decoder ~length
@@ -689,9 +705,7 @@ let decode_video dec dtype f =
       incr_pos dec stream 1;
       f x
     in
-    match stream.dec with
-      | Video d :: _ -> d.decode f
-      | _ -> raise Not_available
+    match stream.dec with Video d -> d.decode f | _ -> assert false
   with (End_of_stream | Ogg.Not_enough_data) as e ->
     if ended then begin
       log dec "All data from stream %nx has been decoded: droping stream." id;
