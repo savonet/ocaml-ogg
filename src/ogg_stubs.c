@@ -258,7 +258,7 @@ static struct custom_operations packet_ops = {
 value value_of_packet(ogg_packet *op) {
   CAMLparam0();
   CAMLlocal1(packet);
-  packet = caml_alloc_custom(&packet_ops, sizeof(ogg_packet *), 1, 0);
+  packet = caml_alloc_custom_mem(&packet_ops, sizeof(ogg_packet *), op->bytes);
   Packet_val(packet) = copy_packet(op);
   CAMLreturn(packet);
 }
