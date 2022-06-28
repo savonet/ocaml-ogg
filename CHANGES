@@ -1,4 +1,4 @@
-0.7.2 (unreleased)
+0.7.2 (28-06-2022)
 =====
 * Use `caml_alloc_custom_mem` for packet allocations (#2348)
 
