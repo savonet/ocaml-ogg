@@ -15,6 +15,7 @@
  (depends
   conf-libogg
   conf-pkg-config
+  (ocaml (>= 4.08.0))
   dune
   dune-configurator)
 )
