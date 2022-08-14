@@ -166,8 +166,8 @@ CAMLprim value ocaml_ogg_sync_reset(value oy) {
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value ocaml_ogg_sync_pageseek(value callback, value oy) {
-  CAMLparam2(callback, oy);
+CAMLprim value ocaml_ogg_sync_pageseek(value cb, value oy) {
+  CAMLparam2(cb, oy);
   CAMLlocal1(bytes);
   ogg_sync_state *sync = Sync_state_val(oy);
   int read;
@@ -178,7 +178,7 @@ CAMLprim value ocaml_ogg_sync_pageseek(value callback, value oy) {
   bytes = caml_alloc_string(len);
 
   while (err <= 0) {
-    read = Int_val(caml_callback3(callback, bytes, Val_int(0), Val_int(len)));
+    read = Int_val(caml_callback3(cb, bytes, Val_int(0), Val_int(len)));
     if (read == 0)
       caml_raise_constant(*caml_named_value("ogg_exn_eos"));
 
@@ -191,8 +191,8 @@ CAMLprim value ocaml_ogg_sync_pageseek(value callback, value oy) {
   CAMLreturn(value_of_page(&page));
 }
 
-CAMLprim value ocaml_ogg_sync_read(value callback, value oy) {
-  CAMLparam2(callback, oy);
+CAMLprim value ocaml_ogg_sync_read(value cb, value oy) {
+  CAMLparam2(cb, oy);
   CAMLlocal2(ret, bytes);
   ogg_sync_state *sync = Sync_state_val(oy);
   int read;
@@ -205,7 +205,7 @@ CAMLprim value ocaml_ogg_sync_read(value callback, value oy) {
   while (ans != 1) {
     if (ans == -1)
       caml_raise_constant(*caml_named_value("ogg_exn_out_of_sync"));
-    read = Int_val(caml_callback3(callback, bytes, Val_int(0), Val_int(len)));
+    read = Int_val(caml_callback3(cb, bytes, Val_int(0), Val_int(len)));
     if (read == 0)
       caml_raise_constant(*caml_named_value("ogg_exn_eos"));
 
