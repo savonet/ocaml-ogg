@@ -182,6 +182,9 @@ module Stream : sig
   (** Returns true if the end of stream has been reached. *)
   val eos : stream -> bool
 
+  (** Terminate the stream and return its final pages. *)
+  val terminate : stream -> Page.t list
+
   (**
     * This function forms packets into pages. Internally,
     * it assembles the accumulated packet bodies into an Ogg page

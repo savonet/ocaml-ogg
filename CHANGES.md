@@ -1,3 +1,7 @@
+0.7.4 (unreleased)
+=====
+* Add `Stream.terminate`
+
 0.7.3 (14-08-2022)
 =====
 * Fix build error with OCaml `4.14`

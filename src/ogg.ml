@@ -78,6 +78,7 @@ module Stream = struct
 
   external serialno : stream -> nativeint = "ocaml_ogg_stream_serialno"
   external eos : stream -> bool = "ocaml_ogg_stream_eos"
+  external terminate : stream -> Page.t = "ocaml_ogg_stream_terminate"
   external get_page : stream -> unit -> Page.t = "ocaml_ogg_stream_pageout"
   external get_page_fill : stream -> int -> Page.t = "ocaml_ogg_stream_pageout"
 
@@ -96,6 +97,15 @@ module Stream = struct
   external put_packet : stream -> packet -> unit = "ocaml_ogg_stream_packetin"
   external put_page : stream -> Page.t -> unit = "ocaml_ogg_stream_pagein"
   external flush_page : stream -> Page.t = "ocaml_ogg_flush_stream"
+
+  let terminate os =
+    let rec f pages = 
+      try
+        f (flush_page os :: pages)
+      with Not_enough_data -> pages
+    in
+    let pages = f [] in
+    List.rev (terminate os::pages)
 end
 
 module Sync = struct

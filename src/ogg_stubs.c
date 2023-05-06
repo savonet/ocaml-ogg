@@ -281,6 +281,36 @@ CAMLprim value ocaml_ogg_stream_eos(value o_stream_state) {
   CAMLreturn(Val_bool(ogg_stream_eos(os)));
 }
 
+// libogg does not offer any API to generate a final, empty page.
+// However, some (most!) codecs need a synchronous way to end their
+// logical bitstream without having to submit an empty packet so we
+// hack it away..
+CAMLprim value ocaml_ogg_stream_terminate(value o_stream_state) {
+  CAMLparam1(o_stream_state);
+  ogg_stream_state *os = Stream_state_val(o_stream_state);
+  ogg_page page;
+
+  ogg_packet op;
+  op.packet = (unsigned char *)NULL;
+  op.bytes = 0;
+  op.b_o_s = 0;
+  op.e_o_s = 1;
+  op.granulepos = os->granulepos + 1;
+  op.packetno = os->packetno + 1;
+  ogg_stream_packetin(os, &op);
+
+  if (!ogg_stream_pageout(os, &page))
+    caml_raise_constant(*caml_named_value("ogg_exn_bad_data"));
+
+  page.header[26] = 0;
+  page.header_len = 27;
+  page.body = NULL;
+  page.body_len = 0;
+
+  ogg_page_checksum_set(&page);
+  CAMLreturn(value_of_page(&page));
+}
+
 CAMLprim value ocaml_ogg_stream_pageout(value o_stream_state, value fill) {
   CAMLparam1(o_stream_state);
   ogg_stream_state *os = Stream_state_val(o_stream_state);

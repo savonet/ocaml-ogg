@@ -1,5 +1,5 @@
 (lang dune 2.8)
-(version 0.7.3)
+(version 0.7.4)
 (name ogg)
 (source (github savonet/ocaml-ogg))
 (license GPL-2.0)
