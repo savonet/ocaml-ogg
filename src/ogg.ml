@@ -99,13 +99,11 @@ module Stream = struct
   external flush_page : stream -> Page.t = "ocaml_ogg_flush_stream"
 
   let terminate os =
-    let rec f pages = 
-      try
-        f (flush_page os :: pages)
-      with Not_enough_data -> pages
+    let rec f pages =
+      try f (flush_page os :: pages) with Not_enough_data -> pages
     in
     let pages = f [] in
-    List.rev (terminate os::pages)
+    List.rev (terminate os :: pages)
 end
 
 module Sync = struct

@@ -55,10 +55,12 @@ type video_plane =
 
 (** Only supported for now: plannar YUV formats. *)
 type video_format =
-  | Yuvj_420 (* Planar YCbCr 4:2:0. Each component is an uint8_t,
-              * luma and chroma values are full range (0x00 .. 0xff) *)
-  | Yuvj_422 (* Planar YCbCr 4:2:2. Each component is an uint8_t,
-              * luma and chroma values are full range (0x00 .. 0xff) *)
+  | Yuvj_420
+    (* Planar YCbCr 4:2:0. Each component is an uint8_t,
+     * luma and chroma values are full range (0x00 .. 0xff) *)
+  | Yuvj_422
+    (* Planar YCbCr 4:2:2. Each component is an uint8_t,
+     * luma and chroma values are full range (0x00 .. 0xff) *)
   | Yuvj_444
 
 (* Planar YCbCr 4:4:4. Each component is an uint8_t,
@@ -198,15 +200,15 @@ let feed_page ~position decoder page =
       if total_samples > stream.read_samples then begin
         begin
           match position with
-          | Some p ->
-              if not (Hashtbl.mem stream.index granulepos) then
-                Hashtbl.add stream.index granulepos
-                  {
-                    index_bytes = p;
-                    samples = Int64.sub total_samples stream.read_samples;
-                    total_samples = stream.read_samples;
-                  }
-          | None -> ()
+            | Some p ->
+                if not (Hashtbl.mem stream.index granulepos) then
+                  Hashtbl.add stream.index granulepos
+                    {
+                      index_bytes = p;
+                      samples = Int64.sub total_samples stream.read_samples;
+                      total_samples = stream.read_samples;
+                    }
+            | None -> ()
         end;
         stream.read_samples <- total_samples
       end
