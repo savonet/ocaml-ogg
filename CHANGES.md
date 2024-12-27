@@ -1,3 +1,7 @@
+0.8.0 (unreleased)
+======
+* Add optional `fill` argument to ogg decoders.
+
 0.7.4 (2023-05-07)
 =====
 * Add `Stream.terminate`

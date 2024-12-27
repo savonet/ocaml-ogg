@@ -22,13 +22,13 @@
 
 (** Ogg stream demuxer *)
 
-(** This module provides a functional abstract API to 
+(** This module provides a functional abstract API to
    * decode and seek in Ogg streams.
    *
    * Decoders are also provided in ocaml-vorbis,
    * ocaml-speex, ocaml-schroedinger, ocaml-flac and
    * ocaml-theora.
-   * 
+   *
    * Functions in this module are not thread safe! *)
 
 (** {2 Decoding} *)
@@ -45,7 +45,7 @@ type callbacks = {
   tell : (unit -> int) option;
 }
 
-(** Type for a decodable track. 
+(** Type for a decodable track.
   * First element is a string describing
   * the decoder used to decode the track.
   * Second element is the serial number
@@ -128,8 +128,8 @@ exception End_of_stream
 
 (** {3 Initialization functions } *)
 
-(** Initiate a decoder with the given callbacks. 
-  * [log] is an optional functioned used to 
+(** Initiate a decoder with the given callbacks.
+  * [log] is an optional functioned used to
   * return logged messages during the deocding
   * process. *)
 val init : ?log:(string -> unit) -> callbacks -> t
@@ -140,7 +140,7 @@ val init_from_file : ?log:(string -> unit) -> string -> t * Unix.file_descr
 (** Initate a decoder from a given [Unix.file_descriptor] *)
 val init_from_fd : ?log:(string -> unit) -> Unix.file_descr -> t
 
-(** Get the Ogg.Sync handler associated to 
+(** Get the Ogg.Sync handler associated to
   * the decoder. Use only if know what you are doing. *)
 val get_ogg_sync : t -> Ogg.Sync.t
 
@@ -151,15 +151,15 @@ val reset : t -> unit
 (** Consume all remaining pages of the current
   * stream. This function may be called to skip
   * a sequentialized stream but it may be quite
-  * CPU intensive if there are many pages remaining.. 
-  * 
+  * CPU intensive if there are many pages remaining..
+  *
   * [eos dec] is [true] after this call. *)
 val abort : t -> unit
 
 (** [true] if the decoder has reached the end of each
   * logical streams and all data has been decoded.
   *
-  * If you do not plan on decoding some data, 
+  * If you do not plan on decoding some data,
   * you should use [drop_track] to indicate it
   * to the decoder. Otherwise, [eos] will return
   * [false] until you have decoded all data. *)
@@ -218,16 +218,16 @@ val can_seek : t -> bool
   * current stream has been reached while
   * seeking. You may call [reset] in this
   * situation to see if there is a new seqentialized
-  * stream available. 
-  * 
-  * Returns the time actually reached, either in 
+  * stream available.
+  *
+  * Returns the time actually reached, either in
   * relative time or absolute time. *)
 val seek : ?relative:bool -> t -> float -> float
 
 (** {3 Decoding functions} *)
 
-(** Decode audio data, if possible. 
-  * Decoded data is passed to the second argument. 
+(** Decode audio data, if possible.
+  * Decoded data is passed to the second argument.
   *
   * Raises [End_of_stream] if all stream have ended.
   * In this case, you can try [reset] to see if there is a
@@ -242,8 +242,8 @@ val decode_audio : t -> track -> (audio_data -> unit) -> unit
   * new sequentialized stream. *)
 val decode_audio_ba : t -> track -> (audio_ba_data -> unit) -> unit
 
-(** Decode video data, if possible. 
-  * Decoded data is passed to the second argument. 
+(** Decode video data, if possible.
+  * Decoded data is passed to the second argument.
   *
   * Raises [End_of_stream] if all streams have ended.
   * In this case, you can try [reset] to see if there is a
@@ -259,7 +259,7 @@ type ('a, 'b) decoder = {
   name : string;
   info : unit -> 'a * metadata;
   decode : ('b -> unit) -> unit;
-  restart : Ogg.Stream.stream -> unit;
+  restart : fill:(unit -> unit) -> Ogg.Stream.stream -> unit;
   (* This function is called after seeking
    * to notify the decoder of the new [Ogg.Stream.stream]
    * that is should use to pull data packets. *)
@@ -282,7 +282,8 @@ type decoders =
   * using the initial [Ogg.Stream.stream] used to pull data packets for the
   * decoder. *)
 type register_decoder =
-  (Ogg.Stream.packet -> bool) * (Ogg.Stream.stream -> decoders)
+  (Ogg.Stream.packet -> bool)
+  * (fill:(unit -> unit) -> Ogg.Stream.stream -> decoders)
 
 (** {3 Functions} *)
 

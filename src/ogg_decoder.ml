@@ -40,7 +40,7 @@ type ('a, 'b) decoder = {
   name : string;
   info : unit -> 'a * metadata;
   decode : ('b -> unit) -> unit;
-  restart : Ogg.Stream.stream -> unit;
+  restart : fill:(unit -> unit) -> Ogg.Stream.stream -> unit;
   samples_of_granulepos : Int64.t -> Int64.t;
 }
 
@@ -139,7 +139,8 @@ exception Not_available
 exception End_of_stream
 
 type register_decoder =
-  (Ogg.Stream.packet -> bool) * (Ogg.Stream.stream -> decoders)
+  (Ogg.Stream.packet -> bool)
+  * (fill:(unit -> unit) -> Ogg.Stream.stream -> decoders)
 
 let get_some x = match x with Some x -> x | None -> assert false
 let ogg_decoders = Hashtbl.create 1
@@ -152,27 +153,6 @@ let eos dec =
   dec.started
   && Hashtbl.length dec.streams = 0
   && Hashtbl.length dec.finished_streams = 0
-
-let test dec page =
-  let serial = Ogg.Page.serialno page in
-  log dec "Found a ogg logical stream, serial: %nx" serial;
-  let os = Ogg.Stream.create ~serial () in
-  Ogg.Stream.put_page os page;
-  (* Get first packet *)
-  let packet = Ogg.Stream.peek_packet os in
-  try
-    Hashtbl.iter
-      (fun format (check, decode) ->
-        log dec "Trying ogg/%s format" format;
-        if check packet then (
-          log dec "ogg/%s format detected for stream %nx" format serial;
-          raise (Exit (serial, os, decode os)))
-        else ())
-      ogg_decoders;
-    log dec "Couldn't find a decoder for ogg logical stream with serial %nx"
-      serial;
-    raise (Exit (serial, os, Unknown))
-  with Exit (s, o, d) -> (s, o, d)
 
 let granuleconv dec granulepos cur =
   try
@@ -243,6 +223,27 @@ let get_page decoder =
 let feed decoder =
   let position, page = get_page decoder in
   feed_page ~position decoder page
+
+let test dec page =
+  let serial = Ogg.Page.serialno page in
+  log dec "Found a ogg logical stream, serial: %nx" serial;
+  let os = Ogg.Stream.create ~serial () in
+  Ogg.Stream.put_page os page;
+  (* Get first packet *)
+  let packet = Ogg.Stream.peek_packet os in
+  try
+    Hashtbl.iter
+      (fun format (check, decode) ->
+        log dec "Trying ogg/%s format" format;
+        if check packet then (
+          log dec "ogg/%s format detected for stream %nx" format serial;
+          raise (Exit (serial, os, decode ~fill:(fun () -> feed dec) os)))
+        else ())
+      ogg_decoders;
+    log dec "Couldn't find a decoder for ogg logical stream with serial %nx"
+      serial;
+    raise (Exit (serial, os, Unknown))
+  with Exit (s, o, d) -> (s, o, d)
 
 (** This should be called only
   * when we are near the end of
@@ -608,11 +609,12 @@ let seek ?(relative = false) dec time =
    * each streams. *)
   let resync x =
     sync_forward dec sync_points x;
+    let fill () = feed dec in
     match x.sync_stream.dec with
-      | Audio_ba d -> d.restart x.sync_stream.os
-      | Audio_both (d, _) -> d.restart x.sync_stream.os
-      | Audio d -> d.restart x.sync_stream.os
-      | Video d -> d.restart x.sync_stream.os
+      | Audio_ba d -> d.restart ~fill x.sync_stream.os
+      | Audio_both (d, _) -> d.restart ~fill x.sync_stream.os
+      | Audio d -> d.restart ~fill x.sync_stream.os
+      | Video d -> d.restart ~fill x.sync_stream.os
       | _ -> ()
   in
   List.iter resync sync_points;

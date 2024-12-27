@@ -1,5 +1,5 @@
 (lang dune 2.8)
-(version 0.7.4)
+(version 0.8.0)
 (name ogg)
 (source (github savonet/ocaml-ogg))
 (license "LGPL-2.1-or-later WITH OCaml-LGPL-linking-exception")
